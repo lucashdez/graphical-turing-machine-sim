@@ -1,0 +1,14 @@
+qa qb qc qf
+a b
+a b c d .
+qa
+.
+qf
+qa a qb c R
+qb a qb a R
+qb d qb d R
+qb . qf . R
+qb b qc d L
+qc d qc d L
+qc a qc a L
+qc c qa c R
