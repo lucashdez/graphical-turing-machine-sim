@@ -12,3 +12,8 @@ vulkanalia = { version = "=0.23.0", features = [
     "provisional",
 ] }
 winit = "0.29.15"
+cgmath = "0.18"
+png = "0.17"
+pretty_env_logger = "0.5"
+thiserror = "1"
+tobj = { features = ["log"] }
