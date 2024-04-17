@@ -4,5 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vulkanalia = "0.23.0"
+anyhow = "1.0.82"
+log = "0.4.21"
+vulkanalia = { version = "=0.23.0", features = [
+    "libloading",
+    "window",
+    "provisional",
+] }
 winit = "0.29.15"

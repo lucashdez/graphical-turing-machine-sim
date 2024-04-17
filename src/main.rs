@@ -20,7 +20,7 @@ fn main() {
     // input, and uses significantly less power/CPU time than ControlFlow::Poll.
     event_loop.set_control_flow(ControlFlow::Wait);
 
-    let mut app: App = App::create(&window).unwrap();
+    let mut app: App = unsafe { App::create(&window).unwrap() };
     event_loop
         .run(move |event, elwt| {
             match event {
