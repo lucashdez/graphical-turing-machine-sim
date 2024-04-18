@@ -5,9 +5,14 @@ use winit::{
     window::WindowBuilder,
 };
 
+extern crate pretty_env_logger;
+#[macro_use]
+extern crate log;
+
 pub mod vulkan;
 
 fn main() {
+    pretty_env_logger::init();
     let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
