@@ -1,4 +1,5 @@
 use vulkan::app::App;
+use vulkanalia::vk::DeviceV1_0;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -34,8 +35,10 @@ fn main() {
                     event: WindowEvent::CloseRequested,
                 } => {
                     println!("The close button was pressed in: {:?}; stopping", window_id);
-                    elwt.exit();
+
+                    unsafe { app.device.device_wait_idle().unwrap() }
                     app.destroy();
+                    elwt.exit();
                 }
                 Event::AboutToWait => {
                     // Application update code.
