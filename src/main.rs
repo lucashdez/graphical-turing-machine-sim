@@ -53,7 +53,7 @@ fn main() {
                 } => {
                     if !elwt.exiting() {
                         // TODO: Handle unwrap
-                        app.render(&window).unwrap()
+                        unsafe { app.render(&window) }.unwrap()
                     }
                 }
                 _ => (),

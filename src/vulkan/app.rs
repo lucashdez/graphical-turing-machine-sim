@@ -108,11 +108,11 @@ impl App {
         let mut data = AppData::default();
         let instance = create_instance(window, &entry, &mut data)?;
         let device = create_logical_device(&entry, &instance, &mut data)?;
-        create_swapchain(window, &instance, &device, &mut data);
-        create_swapchain_image_views(&device, &mut data);
-        create_pipeline(&device, &mut data);
+        create_swapchain(window, &instance, &device, &mut data)?;
+        create_swapchain_image_views(&device, &mut data)?;
+        create_pipeline(&device, &mut data)?;
         data.surface = vk_window::create_surface(&instance, &window, &window)?;
-        pick_physical_device(&instance, &mut data);
+        pick_physical_device(&instance, &mut data)?;
         Ok(Self {
             entry,
             instance,
@@ -121,7 +121,7 @@ impl App {
         })
     }
 
-    pub fn render(&mut self, window: &Window) -> Result<()> {
+    pub unsafe fn render(&mut self, window: &Window) -> Result<()> {
         Ok(())
     }
 
