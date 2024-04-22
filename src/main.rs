@@ -16,6 +16,7 @@ fn main() {
     pretty_env_logger::init();
     let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let mut minimized: bool = false;
 
     // ControlFlow::Poll continuously runs the event loop, even if the OS hasn't
     // dispatched any events. This is ideal for games and similar applications.
@@ -50,15 +51,23 @@ fn main() {
                     // can render here instead.
                     window.request_redraw();
                 }
-                Event::WindowEvent {
-                    window_id,
-                    event: WindowEvent::RedrawRequested,
-                } => {
-                    if !elwt.exiting() {
-                        // TODO: Handle unwrap
-                        unsafe { app.render(&window) }.unwrap()
+                Event::WindowEvent { window_id, event } => match event {
+                    WindowEvent::RedrawRequested => {
+                        if !elwt.exiting() && !minimized {
+                            // TODO: Handle unwrap
+                            unsafe { app.render(&window) }.unwrap()
+                        }
                     }
-                }
+                    WindowEvent::Resized(size) => {
+                        if size.width == 0 || size.height == 0 {
+                            minimized = true;
+                        } else {
+                            minimized = false;
+                            app.resized = true;
+                        }
+                    }
+                    _ => (),
+                },
                 _ => (),
             }
         })
