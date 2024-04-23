@@ -298,22 +298,38 @@ struct AppData {
 pub struct SuitabilityError(pub &'static str);
 
 unsafe fn pick_physical_device(instance: &Instance, data: &mut AppData) -> Result<()> {
-    // TODO: Allow integrated GPUs if no Discrete one is available
-    for physical_device in instance.enumerate_physical_devices()? {
-        let properties = instance.get_physical_device_properties(physical_device);
-        /*if let Err(error) = check_physical_device(instance, data, physical_device) {
+    let physical_devices = instance.enumerate_physical_devices()?;
+    let mut ordered_pd: Vec<(vk::PhysicalDevice, u8)> = Vec::new();
+    for pd in physical_devices {
+        let properties = instance.get_physical_device_properties(pd);
+        match properties.device_type {
+            vk::PhysicalDeviceType::DISCRETE_GPU => ordered_pd.push((pd, 1)),
+            vk::PhysicalDeviceType::INTEGRATED_GPU => ordered_pd.push((pd, 2)),
+            vk::PhysicalDeviceType::VIRTUAL_GPU => ordered_pd.push((pd, 3)),
+            vk::PhysicalDeviceType::OTHER => ordered_pd.push((pd, 4)),
+            vk::PhysicalDeviceType::CPU => ordered_pd.push((pd, 5)),
+            _ => {}
+        }
+    }
+    ordered_pd.sort_by(|a, b| a.1.cmp(&b.1));
+    ordered_pd.iter().for_each(|pd| {
+        let properties = instance.get_physical_device_properties(pd.0);
+        debug!("Found physical device: {}", properties.device_name);
+    });
+    for physical_device in ordered_pd {
+        let properties = instance.get_physical_device_properties(physical_device.0);
+        if let Err(error) = check_physical_device(instance, data, physical_device.0) {
             warn!(
                 "Skipping physical device (`{}`): {}",
                 properties.device_name, error
-            )
-        } else {*/
-        info!("Selected physical device (`{}`)", properties.device_name);
-        data.physical_device = physical_device;
-        //return Ok(());
-        //}
+            );
+        } else {
+            info!("Selected physical device (`{}`)", properties.device_name);
+            data.physical_device = physical_device.0;
+            return Ok(());
+        }
     }
-    //Err(anyhow!("Failed to find suitable physical device."))
-    Ok(())
+    Err(anyhow!("Failed to find suitable physical device."))
 }
 
 unsafe fn check_physical_device(
@@ -321,24 +337,18 @@ unsafe fn check_physical_device(
     data: &AppData,
     physical_device: vk::PhysicalDevice,
 ) -> Result<()> {
-    let properties = instance.get_physical_device_properties(physical_device);
-    if properties.device_type != vk::PhysicalDeviceType::DISCRETE_GPU {
-        return Err(anyhow!(SuitabilityError(
-            "Only discrete GPUs are supported."
-        )));
-    }
     let features = instance.get_physical_device_features(physical_device);
+    let support = SwapchainSupport::get(instance, data, physical_device)?;
     if features.geometry_shader != vk::TRUE {
         return Err(anyhow!(SuitabilityError(
             "Missing geometry shader support."
         )));
     }
-    QueueFamilyIndices::get(instance, data, physical_device)?;
-    check_physical_device_extensions(instance, physical_device)?;
-    let support = SwapchainSupport::get(instance, data, physical_device)?;
     if support.formats.is_empty() || support.present_modes.is_empty() {
         return Err(anyhow!(SuitabilityError("Insuficient swapchain support.")));
     }
+    QueueFamilyIndices::get(instance, data, physical_device)?;
+    check_physical_device_extensions(instance, physical_device)?;
     Ok(())
 }
 
