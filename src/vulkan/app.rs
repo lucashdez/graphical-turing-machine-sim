@@ -11,6 +11,7 @@ use vulkanalia::{
 };
 use winit::window::Window;
 
+use crate::vulkan::vertex::*;
 use std::{collections::HashSet, ffi::CStr, os::raw::c_void};
 
 const MAX_FRAMES_IN_FLIGHT: usize = 2;
@@ -244,6 +245,7 @@ impl App {
         // SAFETY: Cleaning the instance
         unsafe {
             self.destroy_swapchain();
+            self.device.destroy_buffer(self.data.vertex_buffer, None);
             self.data
                 .in_flight_fences
                 .iter()
@@ -291,6 +293,7 @@ struct AppData {
     render_finished_semaphores: Vec<vk::Semaphore>,
     in_flight_fences: Vec<vk::Fence>,
     images_in_flight: Vec<vk::Fence>,
+    vertex_buffer: vk::Buffer,
 }
 
 #[derive(Debug, Error)]
@@ -601,7 +604,11 @@ unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()> {
         .stage(vk::ShaderStageFlags::FRAGMENT)
         .module(frag_shader_module)
         .name(b"main\0");
-    let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder();
+    let binding_descriptions = &[Vertex::binding_description()];
+    let attribute_descriptions = Vertex::attribute_description();
+    let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder()
+        .vertex_binding_descriptions(binding_descriptions)
+        .vertex_attribute_descriptions(&attribute_descriptions);
     let input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()
         .topology(vk::PrimitiveTopology::TRIANGLE_LIST)
         .primitive_restart_enable(false);
@@ -815,5 +822,35 @@ unsafe fn create_sync_objects(device: &Device, data: &mut AppData) -> Result<()>
         .iter()
         .map(|_| vk::Fence::null())
         .collect();
+    Ok(())
+}
+
+unsafe fn create_vertex_buffer(
+    instance: &Instance,
+    device: &Device,
+    data: &mut AppData,
+) -> Result<()> {
+    let buffer_info = vk::BufferCreateInfo::builder()
+        .size((std::mem::size_of::<Vertex>() * VERTICES.len()) as u64)
+        .usage(vk::BufferUsageFlags::VERTEX_BUFFER)
+        .sharing_mode(vk::SharingMode::EXCLUSIVE)
+        .flags(vk::BufferCreateFlags::empty());
+    data.vertex_buffer = device.create_buffer(&buffer_info, None)?;
+
+    let requirements = device.get_buffer_memory_requirements(data.vertex_buffer);
+
+    Ok(())
+}
+
+unsafe fn get_memory_type_index(
+    instance: &Instance,
+    data: &AppData,
+    properties: vk::MemoryPropertyFlags,
+    requirements: vk::MemoryRequirements,
+) -> Result<()> {
+    let memory = instance.get_physical_device_memory_properties(data.physical_device);
+    (0..memory.memory_type_count)
+        .find(|i| (requirements.memory_type_bits & (1 << i)) != 0)
+        .ok_or_else(|| anyhow!("Failed to bind suitable memory type"));
     Ok(())
 }
