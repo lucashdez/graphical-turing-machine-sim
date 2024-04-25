@@ -246,6 +246,8 @@ impl App {
         unsafe {
             self.destroy_swapchain();
             self.device.destroy_buffer(self.data.vertex_buffer, None);
+            self.device
+                .free_memory(self.data.vertex_buffer_memory, None);
             self.data
                 .in_flight_fences
                 .iter()
@@ -294,6 +296,7 @@ struct AppData {
     in_flight_fences: Vec<vk::Fence>,
     images_in_flight: Vec<vk::Fence>,
     vertex_buffer: vk::Buffer,
+    vertex_buffer_memory: vk::DeviceMemory,
 }
 
 #[derive(Debug, Error)]
@@ -319,6 +322,7 @@ unsafe fn pick_physical_device(instance: &Instance, data: &mut AppData) -> Resul
         let properties = instance.get_physical_device_properties(pd.0);
         debug!("Found physical device: {}", properties.device_name);
     });
+    dbg!(&ordered_pd);
     for physical_device in ordered_pd {
         let properties = instance.get_physical_device_properties(physical_device.0);
         if let Err(error) = check_physical_device(instance, data, physical_device.0) {
@@ -838,6 +842,16 @@ unsafe fn create_vertex_buffer(
     data.vertex_buffer = device.create_buffer(&buffer_info, None)?;
 
     let requirements = device.get_buffer_memory_requirements(data.vertex_buffer);
+    let memory_info = vk::MemoryAllocateInfo::builder()
+        .allocation_size(requirements.size)
+        .memory_type_index(get_memory_type_index(
+            instance,
+            data,
+            vk::MemoryPropertyFlags::HOST_COHERENT | vk::MemoryPropertyFlags::HOST_VISIBLE,
+            requirements,
+        )?);
+    data.vertex_buffer_memory = device.allocate_memory(&memory_info, None)?;
+    device.bind_buffer_memory(data.vertex_buffer, data.vertex_buffer_memory, 0);
 
     Ok(())
 }
@@ -847,10 +861,13 @@ unsafe fn get_memory_type_index(
     data: &AppData,
     properties: vk::MemoryPropertyFlags,
     requirements: vk::MemoryRequirements,
-) -> Result<()> {
+) -> Result<u32> {
     let memory = instance.get_physical_device_memory_properties(data.physical_device);
     (0..memory.memory_type_count)
-        .find(|i| (requirements.memory_type_bits & (1 << i)) != 0)
-        .ok_or_else(|| anyhow!("Failed to bind suitable memory type"));
-    Ok(())
+        .find(|i| {
+            let suitable = (requirements.memory_type_bits & (1 << i)) != 0;
+            let memory_type = memory.memory_types[*i as usize];
+            suitable && memory_type.property_flags.contains(properties)
+        })
+        .ok_or_else(|| anyhow!("Failed to bind suitable memory type"))
 }
