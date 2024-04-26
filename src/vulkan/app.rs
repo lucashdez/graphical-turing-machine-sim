@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use std::ptr::copy_nonoverlapping as memcpy;
 use thiserror::Error;
 use vulkanalia::{
     bytecode::Bytecode,
@@ -124,6 +125,7 @@ impl App {
         create_pipeline(&device, &mut data)?;
         create_framebuffers(&device, &mut data)?;
         create_command_pool(&instance, &device, &mut data)?;
+        create_vertex_buffer(&instance, &device, &mut data)?;
         create_command_buffers(&device, &mut data)?;
         begin_command_buffers_and_render_pass(&device, &mut data)?;
         create_sync_objects(&device, &mut data)?;
@@ -803,7 +805,9 @@ unsafe fn begin_command_buffers_and_render_pass(device: &Device, data: &mut AppD
             vk::PipelineBindPoint::GRAPHICS,
             data.pipeline,
         );
-        device.cmd_draw(*command_buffer, 3, 1, 0, 0);
+
+        device.cmd_bind_vertex_buffers(*command_buffer, 0, &[data.vertex_buffer], &[0]);
+        device.cmd_draw(*command_buffer, VERTICES.len() as u32, 1, 0, 0);
         device.cmd_end_render_pass(*command_buffer);
         device.end_command_buffer(*command_buffer)?;
     }
@@ -851,7 +855,16 @@ unsafe fn create_vertex_buffer(
             requirements,
         )?);
     data.vertex_buffer_memory = device.allocate_memory(&memory_info, None)?;
-    device.bind_buffer_memory(data.vertex_buffer, data.vertex_buffer_memory, 0);
+    device.bind_buffer_memory(data.vertex_buffer, data.vertex_buffer_memory, 0)?;
+    let memory = device.map_memory(
+        data.vertex_buffer_memory,
+        0,
+        buffer_info.size,
+        vk::MemoryMapFlags::empty(),
+    )?;
+
+    memcpy(VERTICES.as_ptr(), memory.cast(), VERTICES.len());
+    device.unmap_memory(data.vertex_buffer_memory);
 
     Ok(())
 }
