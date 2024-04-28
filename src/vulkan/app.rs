@@ -525,12 +525,16 @@ unsafe fn create_swapchain(
     device: &Device,
     data: &mut AppData,
 ) -> Result<()> {
+    debug!("---- Before indices and spport");
     let indices = QueueFamilyIndices::get(instance, data, data.physical_device)?;
     let support = SwapchainSupport::get(instance, data, data.physical_device)?;
+    debug!("---- After");
 
+    debug!("---- Before surface, present mode and extent ");
     let surface_format = get_swapchain_surface_format(&support.formats);
     let present_mode = get_swapchain_present_mode(&support.present_modes);
     let extent = get_swapchain_extent(window, support.capabilities);
+    debug!("---- After surface, present mode and extent ");
 
     let mut image_count = support.capabilities.min_image_count + 1;
     if support.capabilities.max_image_count != 0
@@ -561,7 +565,9 @@ unsafe fn create_swapchain(
         .present_mode(present_mode)
         .clipped(true)
         .old_swapchain(vk::SwapchainKHR::null());
+    info!("Creating swapchain");
     data.swapchain = device.create_swapchain_khr(&info, None)?;
+    info!("Getting images");
     data.swapchain_images = device.get_swapchain_images_khr(data.swapchain)?;
     data.swapchain_format = surface_format.format;
     data.swapchain_extent = extent;
