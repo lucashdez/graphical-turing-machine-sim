@@ -322,9 +322,11 @@ unsafe fn pick_physical_device(instance: &Instance, data: &mut AppData) -> Resul
     ordered_pd.sort_by(|a, b| a.1.cmp(&b.1));
     ordered_pd.iter().for_each(|pd| {
         let properties = instance.get_physical_device_properties(pd.0);
-        debug!("Found physical device: {}", properties.device_name);
+        debug!(
+            "Found physical device: {}\n\tType: {:?}",
+            properties.device_name, properties.device_type
+        );
     });
-    dbg!(&ordered_pd);
     for physical_device in ordered_pd {
         let properties = instance.get_physical_device_properties(physical_device.0);
         if let Err(error) = check_physical_device(instance, data, physical_device.0) {
