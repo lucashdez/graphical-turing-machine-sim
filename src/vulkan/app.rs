@@ -312,8 +312,8 @@ unsafe fn pick_physical_device(instance: &Instance, data: &mut AppData) -> Resul
     for pd in physical_devices {
         let properties = instance.get_physical_device_properties(pd);
         match properties.device_type {
-            vk::PhysicalDeviceType::DISCRETE_GPU => ordered_pd.push((pd, 1)),
-            vk::PhysicalDeviceType::INTEGRATED_GPU => ordered_pd.push((pd, 2)),
+            vk::PhysicalDeviceType::DISCRETE_GPU => ordered_pd.push((pd, 2)),
+            vk::PhysicalDeviceType::INTEGRATED_GPU => ordered_pd.push((pd, 1)),
             vk::PhysicalDeviceType::VIRTUAL_GPU => ordered_pd.push((pd, 3)),
             vk::PhysicalDeviceType::OTHER => ordered_pd.push((pd, 4)),
             vk::PhysicalDeviceType::CPU => ordered_pd.push((pd, 5)),
