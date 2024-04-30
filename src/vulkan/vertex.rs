@@ -1,24 +1,29 @@
-use cgmath::{vec2, vec3};
+use crate::vulkan::color::*;
+use cgmath::{vec2, vec3, vec4};
 use std::mem::size_of;
 use vulkanalia::vk::{self, HasBuilder};
 pub type Vec2 = cgmath::Vector2<f32>;
 pub type Vec3 = cgmath::Vector3<f32>;
+pub type Vec4 = cgmath::Vector4<f32>;
 
-pub static VERTICES: [Vertex; 3] = [
-    Vertex::new(vec2(0.0, -0.5), vec3(1.0, 0.0, 0.0)),
-    Vertex::new(vec2(0.5, 0.5), vec3(0.0, 1.0, 0.0)),
-    Vertex::new(vec2(-0.5, 0.5), vec3(1.0, 1.0, 1.0)),
+pub static VERTICES: [Vertex; 4] = [
+    Vertex::new(vec2(-0.5, -0.5), vec4(0.0, 1.0, 0.0, 1.0)),
+    Vertex::new(vec2(0.5, -0.5), vec4(1.0, 0.0, 0.0, 1.0)),
+    Vertex::new(vec2(0.5, 0.5), vec4(0.0, 0.0, 1.0, 1.0)),
+    Vertex::new(vec2(-0.5, 0.5), vec4(1.0, 1.0, 1.0, 1.0)),
 ];
+
+pub const INDICES: &[u16] = &[0, 1, 2, 2, 3, 0];
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Vertex {
     pos: Vec2,
-    color: Vec3,
+    color: Vec4,
 }
 
 impl Vertex {
-    pub const fn new(pos: Vec2, color: Vec3) -> Self {
+    pub const fn new(pos: Vec2, color: Vec4) -> Self {
         Self { pos, color }
     }
 
