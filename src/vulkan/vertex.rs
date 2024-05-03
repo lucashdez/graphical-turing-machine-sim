@@ -7,10 +7,10 @@ pub type Vec3 = cgmath::Vector3<f32>;
 pub type Vec4 = cgmath::Vector4<f32>;
 
 pub static VERTICES: [Vertex; 4] = [
-    Vertex::new(vec2(-0.5, -0.5), vec4(0.0, 1.0, 0.0, 1.0)),
-    Vertex::new(vec2(0.5, -0.5), vec4(1.0, 0.0, 0.0, 1.0)),
-    Vertex::new(vec2(0.5, 0.5), vec4(0.0, 0.0, 1.0, 1.0)),
-    Vertex::new(vec2(-0.5, 0.5), vec4(1.0, 1.0, 1.0, 1.0)),
+    Vertex::new(vec2(-0.5, -0.5), 0x00FF00FF),
+    Vertex::new(vec2(0.5, -0.5), 0xFF0000FF),
+    Vertex::new(vec2(0.5, 0.5), 0x0000FFFF),
+    Vertex::new(vec2(-0.5, 0.5), 0xFFFFFFFF),
 ];
 
 pub const INDICES: &[u16] = &[0, 1, 2, 2, 3, 0];
@@ -19,11 +19,11 @@ pub const INDICES: &[u16] = &[0, 1, 2, 2, 3, 0];
 #[derive(Clone, Copy, Debug)]
 pub struct Vertex {
     pos: Vec2,
-    color: Vec4,
+    color: u32,
 }
 
 impl Vertex {
-    pub const fn new(pos: Vec2, color: Vec4) -> Self {
+    pub const fn new(pos: Vec2, color: u32) -> Self {
         Self { pos, color }
     }
 
@@ -46,7 +46,7 @@ impl Vertex {
         let color = vk::VertexInputAttributeDescription::builder()
             .binding(0)
             .location(1)
-            .format(vk::Format::R32G32B32_SFLOAT)
+            .format(vk::Format::R32G32B32A32_UINT)
             .offset(size_of::<Vec2>() as u32)
             .build();
         [pos, color]
