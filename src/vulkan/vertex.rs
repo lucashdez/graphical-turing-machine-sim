@@ -8,9 +8,9 @@ pub type Vec4 = cgmath::Vector4<f32>;
 
 pub static VERTICES: [Vertex; 4] = [
     Vertex::new(vec2(-0.5, -0.5), 0x00FF00FF),
-    Vertex::new(vec2(0.5, -0.5), 0xFF0000FF),
-    Vertex::new(vec2(0.5, 0.5), 0x0000FFFF),
-    Vertex::new(vec2(-0.5, 0.5), 0xFFFFFFFF),
+    Vertex::new(vec2(0.5, -0.5), 0x00FF00FF),
+    Vertex::new(vec2(0.5, 0.5), 0x00FF00FF),
+    Vertex::new(vec2(-0.5, 0.5), 0x00FF00FF),
 ];
 
 pub const INDICES: &[u16] = &[0, 1, 2, 2, 3, 0];
