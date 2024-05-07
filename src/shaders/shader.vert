@@ -12,5 +12,5 @@ void main() {
     color.b = (float((inColor >> 8u ) & 0xFFu))/255.0;
     color.g = (float((inColor >> 16u) & 0xFFu))/255.0;
     color.r = (float((inColor >> 24u) & 0xFFu))/255.0;
-    fragColor = vec4(color.xyz, 1.0);
+    fragColor = vec4(color.xyz, color.a);
 }
