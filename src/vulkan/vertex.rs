@@ -1,5 +1,4 @@
-use crate::vulkan::color::*;
-use cgmath::{vec2, vec3, vec4};
+use cgmath::vec2;
 use std::mem::size_of;
 use vulkanalia::vk::{self, HasBuilder};
 pub type Vec2 = cgmath::Vector2<f32>;
