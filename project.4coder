@@ -32,6 +32,6 @@ commands = {
         .mac = "build/gtms.exe", },
 };
 fkey_command = {
-    .F1 = "build";
-    .F2 = "run";
+    .F1 = "build",
+    .F2 = "run",
 };
