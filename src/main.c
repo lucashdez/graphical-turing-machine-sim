@@ -7,6 +7,7 @@ int gtms_main() {
     
 }
 
+// linux main??
 int main(int argc, char **argv) {
     printf("something");
     something;
