@@ -1,15 +1,7 @@
-#include "include/base.h"
-// NOTE(lucashdez): Delete this import later
-#include <stdio.h>
+typedef int u64;
 
-int gtms_main() {
-    int something = true;
-    
-}
+#define a 32
 
-// linux main??
-int main(int argc, char **argv) {
-    printf("something");
-    something;
-    return(0);
+int main() {
+    i32 b = 32;
 }
