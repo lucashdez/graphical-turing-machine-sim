@@ -1,7 +1,18 @@
-typedef int u64;
+#include "base.h"
+#include "win32.h"
+#include <stdio.h>
 
-#define a 32
+
+struct Panel {
+    
+};
+
+union Rect_i32 {
+    
+};
 
 int main() {
-    i32 b = 32;
+    printf("Hello, World!\n");
+    return(0);
 }
+

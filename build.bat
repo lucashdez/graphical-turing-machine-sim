@@ -1,7 +1,6 @@
 @echo off
-
-set opts=-FC -GR- -EHa- -nologo -Zi
+set opts=-g
 set code=%cd%
 pushd build
-cl %opts% %code%\src\main.c -Fegtms.exe
+clang %opts% -I"%code%\src\include" %code%\src\main.c -o gtms.exe
 popd
