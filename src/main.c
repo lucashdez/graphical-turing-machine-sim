@@ -3,13 +3,7 @@
 #include <stdio.h>
 
 
-struct Panel {
-    
-};
 
-union Rect_i32 {
-    
-};
 
 int main() {
     printf("Hello, World!\n");
