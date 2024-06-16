@@ -26,7 +26,7 @@ commands = {
         .mac = "./build.sh", },
     .run = { .out = "*run*", .footer_panel = true, .save_dirty_files = false,
         .win = "build\\gtms.exe",
-        .linux = "build/gtms.exe",
+        .linux = "./build/gtms",
         .mac = "build/gtms.exe", },
 };
 fkey_command = {

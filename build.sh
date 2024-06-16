@@ -3,5 +3,5 @@
 code="$PWD"
 opts=-g
 cd build > /dev/null
-g++ $opts $code/./src/main.c -o gtms.exe
+clang -Werror $opts -I"$code/src/include" -I"$code/src/impls/" $code/src/main.c -o gtms
 cd $code > /dev/null
