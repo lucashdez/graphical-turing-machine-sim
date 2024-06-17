@@ -24,7 +24,8 @@ mm_create_malloc_base_memory(void) {
 }
 
 
-function struct Arena mm_make_arena_reserve(struct MM_BaseMemory *base, u64 reserve_size) {
+function struct Arena 
+mm_make_arena_reserve(struct MM_BaseMemory *base, u64 reserve_size) {
     struct Arena result = {};
     result.base = base;
     result.memory = base->reserve(base->ctx, reserve_size);
@@ -38,12 +39,14 @@ mm_make_arena(struct MM_BaseMemory *base) {
     return (result);
 }
 
-function void mm_arena_release(struct Arena *arena) {
+function void 
+mm_arena_release(struct Arena *arena) {
     struct MM_BaseMemory *base = arena->base;
     base->release(base->ctx, arena->memory, arena->cap);
 } 
 
-function void* mm_arena_push(struct Arena *arena, u64 size) {
+function void* 
+mm_arena_push(struct Arena *arena, u64 size) {
     void* result = NULL;
     if (arena->pos + size <= arena->cap) {
         result = arena->memory + arena->pos;
@@ -51,7 +54,7 @@ function void* mm_arena_push(struct Arena *arena, u64 size) {
         if (arena->pos >= arena->commit_pos) {
             u64 next_commit_p = align2pow(arena->pos, MM_COMMIT_BLOCK_SIZE - 1);
             u64 next_commit_p_clamped = clampTop(next_commit_p, arena->cap);
-            MM_BaseMemory *base = arena->base; 
+            struct MM_BaseMemory *base = arena->base; 
             base->commit(base->ctx, arena->memory + arena->commit_pos, size);
         }
     }
