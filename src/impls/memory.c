@@ -10,7 +10,6 @@ mm_release(void* ctx, void* ptr, u64 size) {
     free(ptr);
 }
 
-
 function struct MM_BaseMemory*
 mm_create_malloc_base_memory(void) {
     local struct MM_BaseMemory memory = {};
