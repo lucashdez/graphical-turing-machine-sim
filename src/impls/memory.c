@@ -12,7 +12,7 @@ mm_release(void* ctx, void* ptr, u64 size) {
 
 function struct MM_BaseMemory*
 mm_create_malloc_base_memory(void) {
-    local struct MM_BaseMemory memory = {};
+    local_persist struct MM_BaseMemory memory = {};
     if (memory.reserve == 0) {
         memory.reserve = mm_malloc_reserve;
         memory.commit = mm_change_memory_noop;

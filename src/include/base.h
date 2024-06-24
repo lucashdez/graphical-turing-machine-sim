@@ -4,21 +4,37 @@
 #define BASE_H
 
 #define function static
-#define local static
+#define internal static
+#define local_persist static
 #define global static
 
 typedef unsigned char u8;
-typedef unsigned int u16;
-typedef unsigned long int u32;
+typedef signed   char i8;
+typedef unsigned short u16;
+typedef signed   short i16;
+typedef unsigned int u32;
+typedef signed   int i32;
 typedef unsigned long long u64;
-
-typedef signed char i8;
-typedef int i16;
-typedef long int i32;
-typedef long long i64;
-
-typedef float f32;
+typedef signed   long long i64;
+typedef float  f32;
 typedef double f64;
+
+// Booleans
+typedef i8 b8;
+typedef i32 b32; 
+typedef i64 b64;
+
+// Sized Strings
+typedef struct String_Const_u8 {
+    u8 *str;
+    u64 size;
+} String8;
+
+struct String_Const_Char {
+    char* str;
+    u64 size;
+};  
+
 
 ///////////////////////////////////
 // HELPER MACROS
