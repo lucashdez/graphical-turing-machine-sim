@@ -8,6 +8,7 @@
 #define local_persist static
 #define global static
 
+
 typedef unsigned char u8;
 typedef signed   char i8;
 typedef unsigned short u16;
@@ -23,6 +24,8 @@ typedef double f64;
 typedef i8 b8;
 typedef i32 b32; 
 typedef i64 b64;
+#define false 0
+#define true !false 
 
 // Sized Strings
 typedef struct String_Const_u8 {
@@ -46,7 +49,11 @@ struct String_Const_Char {
 
 #define Glue_(A, B) A##B
 #define Glue(A, B) Glue_(A, B)
+#define GlueStr(Astr, Bstr) Astr Bstr
 
+#define string_u8_litexpr(S) (String8) {(u8*)S, sizeof(S)/sizeof(u8)}
+
+// Math
 #define Min(a, b) a<b?a:b
 #define Max(a, b) a>b?a:b
 #define clampTop(a, b) Min(a, b)

@@ -6,9 +6,16 @@
 #define BUILD_H
 
 #include "src/include/base.h"
+#include <stdio.h>
 
+///////////////////////////
+// SO THINGS
 
-#include <assert.h>
+//   WINDOWS
+#ifdef _WIN32
+#  include "src/include/win32.h"
+#else
+#endif
 
 
 // Build types
@@ -19,13 +26,19 @@ struct BuildCmd {
 };
 
 
-function b32 needs_rebuild(); 
-function void cmd_append(struct BuildCmd *cmd, String8 *str);
+
+
+function b32 needs_rebuild(String8 output_path, String8 input_path); 
+function void cmd_append(struct BuildCmd *cmd, String8 str);
 // NOTE(lucashdez) If something goes wrong
 function void reset_files();
 // NOTE(lucashdez): Runs the command
-function void cmd_run(BuildCmd *cmd);
+function void cmd_run(struct BuildCmd *cmd);
 
+#define BUILDER_INFO "[INFO] "
+#define BUILDER_ERROR "[ERROR] "
+
+#define BUILDER_LOG(info, fmt, ...) printf(GlueStr(GlueStr(info, fmt), "\n"), __VA_ARGS__)
 
 #ifndef REBUILD_YOURSELF
 #    if defined(__clang__)
@@ -35,12 +48,15 @@ function void cmd_run(BuildCmd *cmd);
 #    endif
 #endif
 
-#define Stmnt(S) do{S}while(0)
+#include <assert.h>
 
 #define GO_REBUILD_YOURSELF(argc, argv) \
-Stmnt(const char *source_path = __FILE__; \
+Statement(const char *source_path = __FILE__; \
 assert(argc >= 1); \
 const char *binary_path = argv[0]; \
+if (needs_rebuild(string_u8_litexpr(binary_path), string_u8_litexpr(source_path))) {\
+BUILDER_LOG(BUILDER_INFO, "Rebuilding...");\
+} \
 )
 
 

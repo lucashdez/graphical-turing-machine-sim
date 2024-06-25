@@ -8,7 +8,8 @@ patterns = {
     "*.4coder",
 };
 blacklist_patterns = {
-    ".*",
+    "build.c",
+    "build.h",
 };
 load_paths_base = {
     { "src/", .relative = true, .recursive = true, },
@@ -24,12 +25,24 @@ commands = {
         .win = "build.bat",
         .linux = "./build.sh",
         .mac = "./build.sh", },
-    .run = { .out = "*run*", .footer_panel = true, .save_dirty_files = false,
+    .run = { 
+        .out = "*run*", .footer_panel = true, .save_dirty_files = false,
         .win = "build\\gtms.exe",
         .linux = "./build/gtms",
-        .mac = "build/gtms.exe", },
+        .mac = "build/gtms.exe", 
+    },
+    .build_builder = {
+        .out = "*building builder*", .footer_panel = true, .save_dirty_files = true,
+        .win = "clang build.c -o build_all.exe"
+    },
+    .run_builder = {
+        .out = "*runing builder*", .footer_panel = true, .save_dirty_files = true,
+        .win = ".\build_all.exe"
+    },
 };
 fkey_command = {
     .F1 = "build",
     .F2 = "run",
+    .F3 = "run_builder",
+    .F5 = "build_builder",
 };
