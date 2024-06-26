@@ -23,7 +23,7 @@ bs_get_filetime_from_path(String8 path) {
     }
     CloseHandle(file_handle);
 #else
-    // Lenus
+    // TODO Lenus get filetimes thing
 #endif
     return (result);
 }
@@ -43,17 +43,21 @@ bs_needs_rebuild(String8 output_path, String8 input_path) {
 
 function void 
 bs_cmd_append(struct BuildCmd *cmd, String8 str) {
-    
+    // TODO Create a process to append commands to the buildCmd
 }
 
 function void 
 bs_reset_files() {
-    
+    // TODO reset the files if something happens  
 }
 
 function void 
 bs_cmd_run(struct BuildCmd *cmd) {
-    
+    // TODO Run the commands in the buildCmd line
+    if (cmd->count == 0) {
+        BUILDER_LOG(BUILDER_INFO, "There is no command to run");
+        return;
+    }
 }
 
 
