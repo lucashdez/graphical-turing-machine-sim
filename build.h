@@ -6,6 +6,7 @@
 #define BUILD_H
 
 #include "src/include/base.h"
+#include "src/include/memory.h"
 #include <stdio.h>
 
 ///////////////////////////
@@ -21,19 +22,18 @@
 // Build types
 
 struct BuildCmd {
+    struct Arena arena;
     String8 *items;
     u32 count;
 };
 
 
-
-
-function b32 needs_rebuild(String8 output_path, String8 input_path); 
-function void cmd_append(struct BuildCmd *cmd, String8 str);
+function b32 bs_needs_rebuild(String8 output_path, String8 input_path); 
+function void bs_cmd_append(struct BuildCmd *cmd, String8 str);
 // NOTE(lucashdez) If something goes wrong
-function void reset_files();
+function void bs_reset_files();
 // NOTE(lucashdez): Runs the command
-function void cmd_run(struct BuildCmd *cmd);
+function void bs_cmd_run(struct BuildCmd *cmd);
 
 #define BUILDER_INFO "[INFO] "
 #define BUILDER_ERROR "[ERROR] "
@@ -54,7 +54,7 @@ function void cmd_run(struct BuildCmd *cmd);
 Statement(const char *source_path = __FILE__; \
 assert(argc >= 1); \
 const char *binary_path = argv[0]; \
-if (needs_rebuild(string_u8_litexpr(binary_path), string_u8_litexpr(source_path))) {\
+if (bs_needs_rebuild(string_u8_litexpr(binary_path), string_u8_litexpr(source_path))) {\
 BUILDER_LOG(BUILDER_INFO, "Rebuilding...");\
 } \
 )
