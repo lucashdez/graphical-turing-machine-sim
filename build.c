@@ -42,13 +42,35 @@ bs_needs_rebuild(String8 output_path, String8 input_path) {
 }
 
 function void 
-bs_cmd_append(struct BuildCmd *cmd, String8 str) {
+bs_cmd_append_s8(struct BuildCmd *cmd, String8 str) {
     // TODO Create a process to append commands to the buildCmd
 }
 
 function void 
+bs_cmd_append(struct BuildCmd *cmd, char* str) {
+    // TODO Create a process to append commands to the buildCmd
+}
+
+
+function void 
 bs_reset_files() {
     // TODO reset the files if something happens  
+}
+
+function String8*
+bs_cmd_construct_command(struct Arena *arena, struct BuildCmd *cmd) {
+    String8* result = MMPushArrayZeros(arena, String8, 1);
+    u32 len = cmd->count; 
+    printf("%d\n", len);
+    u32 i = 0; 
+    u8* res_ptr = result->str; 
+    while (len-- > 0) {
+        result->str = cmd->items[i].str;
+        mm_memcpy(res_ptr, cmd->items[i].str, cmd->items[i].size);
+        result->size += cmd->items[i].size;
+        i++;
+    }
+    return result;
 }
 
 function void 
@@ -61,6 +83,19 @@ bs_cmd_run(struct BuildCmd *cmd) {
 }
 
 
+struct node {
+    struct node* next;
+    i32 value;
+};
+
 int main(int argc, char **argv) {
     GO_REBUILD_YOURSELF(argc, argv);
+    struct BuildCmd cmd = {};
+    cmd.arena = mm_scratch_arena();
+    bs_cmd_append(&cmd, "clang");
+    {
+        struct Arena scratch = mm_scratch_arena();
+        String8 *command = bs_cmd_construct_command(&scratch, &cmd);
+        printf("%s\n", (char*)command->str);
+    }
 }

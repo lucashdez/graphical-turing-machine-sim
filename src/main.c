@@ -1,5 +1,5 @@
 // HEADERS
-#include "base.h"
+#include "base/base_include.h"
 #include "win32.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,7 +8,6 @@
 #include "win32.h"
 
 // DEFINITIONS
-#include "memory.c"
 #include "win32.c"
 
 //    PLATFORM
@@ -17,7 +16,7 @@ enum Week_days {
     WD_Monday
 };
 #ifdef __linux__
-int main() {
+int main(int argc, char **argv) {
     struct MM_BaseMemory* mem = mm_create_malloc_base_memory();
 }
 #endif

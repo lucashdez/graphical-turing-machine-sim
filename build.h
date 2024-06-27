@@ -5,8 +5,7 @@
 #ifndef BUILD_H
 #define BUILD_H
 
-#include "src/include/base.h"
-#include "src/include/memory.h"
+#include "base/base_include.h"
 #include <stdio.h>
 
 ///////////////////////////
@@ -14,8 +13,9 @@
 
 //   WINDOWS
 #ifdef _WIN32
-#  include "src/include/win32.h"
+#  include "win32.h"
 #else
+#  include "linux.h"
 #endif
 
 
@@ -29,10 +29,12 @@ struct BuildCmd {
 
 
 function b32 bs_needs_rebuild(String8 output_path, String8 input_path); 
-function void bs_cmd_append(struct BuildCmd *cmd, String8 str);
+function void bs_cmd_append_s8(struct BuildCmd *cmd, String8 str);
+function void bs_cmd_append(struct BuildCmd *cmd, char* str);
 // NOTE(lucashdez) If something goes wrong
 function void bs_reset_files();
 // NOTE(lucashdez): Runs the command
+function String8* bs_cmd_construct_command(struct Arena *arena, struct BuildCmd *cmd);
 function void bs_cmd_run(struct BuildCmd *cmd);
 
 #define BUILDER_INFO "[INFO] "
@@ -56,6 +58,8 @@ assert(argc >= 1); \
 const char *binary_path = argv[0]; \
 if (bs_needs_rebuild(string_u8_litexpr(binary_path), string_u8_litexpr(source_path))) {\
 BUILDER_LOG(BUILDER_INFO, "Rebuilding...");\
+struct BuildCmd cmd = {0};\
+cmd.arena = mm_scratch_arena();\
 } \
 )
 
