@@ -33,7 +33,8 @@ commands = {
     },
     .build_builder = {
         .out = "*building builder*", .footer_panel = true, .save_dirty_files = true,
-        .win = "clang -Isrc/include build.c -o build_all.exe"
+        .win = "clang -Isrc/include build.c -o build_all.exe",
+        .linux = "clang -Isrc/include build.c -o build_all",
     },
     .run_builder = {
         .out = "*runing builder*", .footer_panel = true, .save_dirty_files = true,
