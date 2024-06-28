@@ -11,9 +11,11 @@
 ///////////////////////////
 // SO THINGS
 
+// TODO Create a struct that contains the file information for future uses
 //   WINDOWS
 #ifdef _WIN32
 #  include "win32.h"
+#  include "src/win32.c"
 #else
 #  include "linux.h"
 #endif
@@ -21,16 +23,26 @@
 
 // Build types
 
+struct StrNode {
+    String8 str;
+    struct StrNode *next;
+};
+
+struct StrList {
+    struct Arena arena;
+    struct StrNode* first;
+    struct StrNode* last;
+};
+
 struct BuildCmd {
     struct Arena arena;
-    String8 *items;
+    struct StrList list;
     u32 count;
 };
 
 
 function b32 bs_needs_rebuild(String8 output_path, String8 input_path); 
-function void bs_cmd_append_s8(struct BuildCmd *cmd, String8 str);
-function void bs_cmd_append(struct BuildCmd *cmd, char* str);
+function void bs_cmd_append(struct BuildCmd *cmd, String8 str);
 // NOTE(lucashdez) If something goes wrong
 function void bs_reset_files();
 // NOTE(lucashdez): Runs the command

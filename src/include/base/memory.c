@@ -13,8 +13,19 @@ function void*
 mm_memcpy(void* dest, void* src, u64 len) {
     char *d = dest;
     const char *s = src;
-    while(len--) {
+    while(len-- && s+1 != 0) {
         *d++ = *s++;
+    }
+    return dest;
+}
+
+function void* 
+mm_memcpymv(void* dest, void* src, u64 len) {
+    char *d = dest;
+    const char *s = src;
+    while(len-- && *(s+1) != 0) {
+        *d++ = *s++;
+        dest++;
     }
     return dest;
 }

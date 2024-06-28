@@ -89,9 +89,12 @@ struct String_Const_Char {
 
 // Simple Linked-List Queue
 //   TODO Push
-#define sll_queue_push()
+#define sll_queue_push_multiple_(f, l, ff, ll) if(ll){if(f){l->next=ff;}else{f=ff;}l=ll;l->next=0;}
+#define sll_queue_push_(f, l, n) sll_queue_push_multiple_(f,l,n,n)
+#define sll_queue_push(f, l, n) Statement(sll_queue_push_((f), (l), (n)))
 //   TODO Pop
-#define sll_queue_pop()
+#define sll_queue_pop_(f, l) if(f==l){f=l=0;} else {f=f->next;}
+#define sll_queue_pop(f, l) Statement(sll_queue_pop_((f), (l)))
 
 // Simple Linked-List Stack
 #define sll_stack_push(h, n) n->next = h, h=n

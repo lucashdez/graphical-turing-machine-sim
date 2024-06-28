@@ -6,8 +6,9 @@ bs_get_filetime_from_path(String8 path) {
     FILETIME result = {};
 #ifdef _WIN32
     // Wendows
-    HANDLE file_handle = CreateFileA((char*)path.str, 0x80000000, 0x00000001, NULL, 3, 0x1, NULL);
-    if (file_handle == 0) {
+    //HANDLE file_handle = CreateFileA((char*)path.str, 0x80000000, 0x00000001, NULL, 3, 0x1, NULL);
+    struct FM_File file = win32_open_file(path, 0x80000000, 0x00000001, 3, 0x1);
+    if (file.handle == 0) {
         // If not exists, rebuild
         DWORD err = GetLastError();
         if (err == 0x2) {return result;}
@@ -15,13 +16,12 @@ bs_get_filetime_from_path(String8 path) {
         return result;
     } 
     BUILDER_LOG(BUILDER_INFO, "Opened %s", (char*)path.str);
-    BOOL success = GetFileTime(file_handle, NULL, NULL, &result);
+    BOOL success = GetFileTime(file.handle, NULL, NULL, &result);
     if (!success) {
         DWORD err = GetLastError();
         BUILDER_LOG(BUILDER_ERROR, "Could not get the file time: %lu", err);
-        return (FILETIME) {};
     }
-    CloseHandle(file_handle);
+    win32_close_file(file);
 #else
     // TODO Lenus get filetimes thing
 #endif
@@ -42,15 +42,13 @@ bs_needs_rebuild(String8 output_path, String8 input_path) {
 }
 
 function void 
-bs_cmd_append_s8(struct BuildCmd *cmd, String8 str) {
+bs_cmd_append(struct BuildCmd *cmd, String8 str) {
     // TODO Create a process to append commands to the buildCmd
+    struct StrNode* tmpstr = MMPushArrayZeros(&cmd->arena, struct StrNode, 1);
+    tmpstr->str = str;
+    sll_queue_push(cmd->list.first,cmd->list.last, tmpstr);
+    cmd->count += 1;
 }
-
-function void 
-bs_cmd_append(struct BuildCmd *cmd, char* str) {
-    // TODO Create a process to append commands to the buildCmd
-}
-
 
 function void 
 bs_reset_files() {
@@ -60,15 +58,21 @@ bs_reset_files() {
 function String8*
 bs_cmd_construct_command(struct Arena *arena, struct BuildCmd *cmd) {
     String8* result = MMPushArrayZeros(arena, String8, 1);
+    result->str = MMPushArrayZeros(arena, u8, KB(4));
     u32 len = cmd->count; 
-    printf("%d\n", len);
-    u32 i = 0; 
-    u8* res_ptr = result->str; 
+    u8* ptr = result->str;
     while (len-- > 0) {
-        result->str = cmd->items[i].str;
-        mm_memcpy(res_ptr, cmd->items[i].str, cmd->items[i].size);
-        result->size += cmd->items[i].size;
-        i++;
+        u64 size = cmd->list.first->str.size;
+        u8* src = cmd->list.first->str.str;
+        while(size-- > 0 && *src != 0) {
+            *ptr++ = *src++;
+            result->size += 1;
+        }
+        if (len > 1) {
+            *ptr++ = ' ';
+        }
+        result->size+=1;
+        sll_queue_pop(cmd->list.first, cmd->list.last);
     }
     return result;
 }
@@ -82,20 +86,20 @@ bs_cmd_run(struct BuildCmd *cmd) {
     }
 }
 
-
-struct node {
-    struct node* next;
-    i32 value;
-};
-
 int main(int argc, char **argv) {
     GO_REBUILD_YOURSELF(argc, argv);
     struct BuildCmd cmd = {};
     cmd.arena = mm_scratch_arena();
-    bs_cmd_append(&cmd, "clang");
+    cmd.list.arena = mm_scratch_arena();
+    bs_cmd_append(&cmd, string_u8_litexpr("clang"));
+    bs_cmd_append(&cmd, string_u8_litexpr("build.c"));
+    bs_cmd_append(&cmd, string_u8_litexpr("-o build_all.exe"));
     {
         struct Arena scratch = mm_scratch_arena();
         String8 *command = bs_cmd_construct_command(&scratch, &cmd);
         printf("%s\n", (char*)command->str);
     }
 }
+
+
+//PV24013200

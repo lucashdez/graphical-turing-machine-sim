@@ -6,6 +6,7 @@
 // Declarations
 #include "base.h"
 #include "memory.h"
+#include "file_manager.h"
 
 // Definitions
 #include "memory.c"

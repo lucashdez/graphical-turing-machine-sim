@@ -38,7 +38,11 @@ typedef struct _FILETIME {
     DWORD dwHighDateTime;
 } FILETIME, *PFILETIME, *LPFILETIME;
 
-//  Functions
+// INTERN FUNCTIONS
+function struct FM_File win32_open_file(String8 path, u32 access, u32 mode, u32 options, u32 flags);
+function void win32_close_file(struct FM_File file);
+
+// Extern Functions
 extern void CloseHandle(HANDLE handle);
 extern long CompareFileTime(const FILETIME* lpFileTime1, const FILETIME* lpFileTime2);
 extern HANDLE CreateFileA(LPCSTR lpFileHandle, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE htemplateFile);

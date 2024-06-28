@@ -27,6 +27,7 @@ struct Arena {
 // UTILITIES
 function void* mm_memset(void* dest, register int val, register u64 len);
 function void* mm_memcpy(void* dest, void* src, u64 len);
+function void* mm_memcpymv(void* dest, void* src, u64 len);
 
 function struct MM_BaseMemory* mm_create_malloc_base_memory(void);
 function void mm_change_memory_noop(void* ctx, void* ptr, u64 size) {}
