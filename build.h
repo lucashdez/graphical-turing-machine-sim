@@ -48,11 +48,13 @@ function void bs_reset_files();
 // NOTE(lucashdez): Runs the command
 function String8* bs_cmd_construct_command(struct Arena *arena, struct BuildCmd *cmd);
 function void bs_cmd_run(struct BuildCmd *cmd);
+function i8 bs_compare_file_time(struct FM_File* a, struct FM_File* b);
 
 #define BUILDER_INFO "[INFO] "
 #define BUILDER_ERROR "[ERROR] "
 
-#define BUILDER_LOG(info, fmt, ...) printf(GlueStr(GlueStr(info, fmt), "\n"), __VA_ARGS__)
+#define BUILDER_LOG(info, fmt) printf(GlueStr(GlueStr(info, fmt), "\n"))
+#define BUILDER_LOG_ARGS(info, fmt, ...) printf(GlueStr(GlueStr(info, fmt), "\n"), __VA_ARGS__)
 
 #ifndef REBUILD_YOURSELF
 #    if defined(__clang__)

@@ -38,7 +38,8 @@ commands = {
     },
     .run_builder = {
         .out = "*runing builder*", .footer_panel = true, .save_dirty_files = true,
-        .win = ".\build_all.exe"
+        .win = ".\build_all.exe",
+        .linux = "./build_all",
     },
 };
 fkey_command = {

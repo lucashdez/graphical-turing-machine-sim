@@ -1,9 +1,13 @@
 #include "build.h"
 #include <stdlib.h>
 
-internal FILETIME
-bs_get_filetime_from_path(String8 path) {
-    FILETIME result = {};
+function i8 bs_compare_file_time(struct FM_File* a, struct FM_File* b) {
+    return a->info.mod_time < b->info.mod_time? -1 : a->info.mod_time == b->info.mod_time? 0 : 1;
+}
+
+internal struct FM_File
+bs_get_file_from_path(String8 path) {
+    struct FM_File result = {};
 #ifdef _WIN32
     // Wendows
     //HANDLE file_handle = CreateFileA((char*)path.str, 0x80000000, 0x00000001, NULL, 3, 0x1, NULL);
@@ -24,6 +28,9 @@ bs_get_filetime_from_path(String8 path) {
     win32_close_file(file);
 #else
     // TODO Lenus get filetimes thing
+    struct Stat buf = {};
+    stat((char*)path.str, &buf);
+    printf("%lld", buf.st_mtime);
 #endif
     return (result);
 }
@@ -31,13 +38,13 @@ bs_get_filetime_from_path(String8 path) {
 function b32
 bs_needs_rebuild(String8 output_path, String8 input_path) {
     b32 result = false; 
-    FILETIME ft_input = bs_get_filetime_from_path(input_path);
-    FILETIME ft_output = bs_get_filetime_from_path(output_path);
+    struct FM_File ft_input = bs_get_file_from_path(input_path);
+    struct FM_File ft_output = bs_get_file_from_path(output_path);
     // Error with the files or non existing
     // Needs to rebuild
-    if (ft_input.dwHighDateTime == 0 || ft_output.dwHighDateTime == 0) {result = true;}
+    if (ft_input.info.mod_time == 0 || ft_output.info.mod_time == 0) {result = true;}
     // Source is newer than .exe
-    if (CompareFileTime(&ft_input, &ft_output) == 1) {result = true;}
+    if (bs_compare_file_time(&ft_input, &ft_output) == 1) {result = true;}
     return(result);
 }
 
@@ -91,9 +98,6 @@ int main(int argc, char **argv) {
     struct BuildCmd cmd = {};
     cmd.arena = mm_scratch_arena();
     cmd.list.arena = mm_scratch_arena();
-    bs_cmd_append(&cmd, string_u8_litexpr("clang"));
-    bs_cmd_append(&cmd, string_u8_litexpr("build.c"));
-    bs_cmd_append(&cmd, string_u8_litexpr("-o build_all.exe"));
     {
         struct Arena scratch = mm_scratch_arena();
         String8 *command = bs_cmd_construct_command(&scratch, &cmd);
