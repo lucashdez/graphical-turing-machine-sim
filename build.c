@@ -5,6 +5,23 @@ function i8 bs_compare_file_time(struct FM_File* a, struct FM_File* b) {
     return a->info.mod_time < b->info.mod_time? -1 : a->info.mod_time == b->info.mod_time? 0 : 1;
 }
 
+function i32
+bs_rename_file(String8 old_path, String8 new_path) {
+    BUILDER_LOG_ARGS(BUILDER_INFO, "Renaming %s -> %s", old_path.str, new_path.str);
+#ifdef _WIN32
+    if (!MoveFileExA((char*)old_path.str, (char*)new_path.str, 0x1)) {
+        BUILDER_LOG_ARGS(BUILDER_ERROR, "Error renaming file from %s -> %s: %lu", old_path.str, new_path.str, GetLastError());
+        return false;
+    }
+#else
+    //linux
+    //if (!rename(old_path.str, new_path.str)) {
+    //
+    //}
+#endif
+    return true;
+}
+
 internal struct FM_File
 bs_get_file_from_path(String8 path) {
     struct FM_File result = {};
@@ -16,14 +33,20 @@ bs_get_file_from_path(String8 path) {
         // If not exists, rebuild
         DWORD err = GetLastError();
         if (err == 0x2) {return result;}
-        BUILDER_LOG(BUILDER_ERROR, "Could not open %s %lu", (char*)path.str, err);
+        BUILDER_LOG_ARGS(BUILDER_ERROR, "Could not open %s %lu", (char*)path.str, err);
         return result;
-    } 
-    BUILDER_LOG(BUILDER_INFO, "Opened %s", (char*)path.str);
-    BOOL success = GetFileTime(file.handle, NULL, NULL, &result);
-    if (!success) {
-        DWORD err = GetLastError();
-        BUILDER_LOG(BUILDER_ERROR, "Could not get the file time: %lu", err);
+    }
+    BUILDER_LOG_ARGS(BUILDER_INFO, "Opened %s", (char*)path.str);
+    {
+        FILETIME tmp_filetime = {};
+        BOOL success = GetFileTime(file.handle, NULL, NULL, &tmp_filetime);
+        if (!success) {
+            DWORD err = GetLastError();
+            BUILDER_LOG_ARGS(BUILDER_ERROR, "Could not get the file time: %lu", err);
+            return result;
+        }
+        // NOTE Something we must do with the | operator? 
+        result.info.mod_time = tmp_filetime.dwHighDateTime + tmp_filetime.dwLowDateTime;
     }
     win32_close_file(file);
 #else

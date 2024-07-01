@@ -43,6 +43,7 @@ struct BuildCmd {
 
 function b32 bs_needs_rebuild(String8 output_path, String8 input_path); 
 function void bs_cmd_append(struct BuildCmd *cmd, String8 str);
+function i32 bs_rename_file(String8 old_path, String8 new_path);
 // NOTE(lucashdez) If something goes wrong
 function void bs_reset_files();
 // NOTE(lucashdez): Runs the command
@@ -71,9 +72,16 @@ Statement(const char *source_path = __FILE__; \
 assert(argc >= 1); \
 const char *binary_path = argv[0]; \
 if (bs_needs_rebuild(string_u8_litexpr(binary_path), string_u8_litexpr(source_path))) {\
+if(!bs_rename_file(string_u8_litexpr(binary_path), string_u8_litexpr("build.old"))) {\
+exit(1); /* Here we cancel everithing*/ \
+}\
 BUILDER_LOG(BUILDER_INFO, "Rebuilding...");\
 struct BuildCmd cmd = {0};\
 cmd.arena = mm_scratch_arena();\
+cmd.list.arena = mm_scratch_arena(); \
+bs_cmd_append(&cmd, string_u8_litexpr("clang"));\
+String8* command = bs_cmd_construct_command(&cmd.arena, &cmd);\
+BUILDER_LOG_ARGS(BUILDER_INFO, "Final command:\n\t%s", command->str);\
 } \
 )
 
