@@ -73,7 +73,6 @@ bs_needs_rebuild(String8 output_path, String8 input_path) {
 
 function void 
 bs_cmd_append(struct BuildCmd *cmd, String8 str) {
-    // TODO Create a process to append commands to the buildCmd
     struct StrNode* tmpstr = MMPushArrayZeros(&cmd->arena, struct StrNode, 1);
     tmpstr->str = str;
     sll_queue_push(cmd->list.first,cmd->list.last, tmpstr);
@@ -82,6 +81,13 @@ bs_cmd_append(struct BuildCmd *cmd, String8 str) {
 
 function void 
 bs_reset_files() {
+#ifdef _WIN32
+    if(!MoveFileExA("build.old", "build_all.exe", 0x1)) {
+        BUILDER_LOG_ARGS(BUILDER_ERROR, "Could not reset files: %lu", GetLastError());
+    }
+#else
+    
+#endif
     // TODO reset the files if something happens  
 }
 

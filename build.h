@@ -73,7 +73,8 @@ assert(argc >= 1); \
 const char *binary_path = argv[0]; \
 if (bs_needs_rebuild(string_u8_litexpr(binary_path), string_u8_litexpr(source_path))) {\
 if(!bs_rename_file(string_u8_litexpr(binary_path), string_u8_litexpr("build.old"))) {\
-exit(1); /* Here we cancel everithing*/ \
+bs_reset_files(); /* Reset the modified files */ \
+exit(1); /* Here we cancel everithing */ \
 }\
 BUILDER_LOG(BUILDER_INFO, "Rebuilding...");\
 struct BuildCmd cmd = {0};\
