@@ -49,7 +49,9 @@ function void bs_reset_files();
 // NOTE(lucashdez): Runs the command
 function String8* bs_cmd_construct_command(struct Arena *arena, struct BuildCmd *cmd);
 function void bs_cmd_run(struct BuildCmd *cmd);
-function i8 bs_compare_file_time(struct FM_File* a, struct FM_File* b);
+function i32 bs_compare_file_time(struct FM_File* a, struct FM_File* b);
+function void bs_get_builder_command(struct BuildCmd *cmd);
+function i32 bs_run_command(String8* command); 
 
 #define BUILDER_INFO "[INFO] "
 #define BUILDER_ERROR "[ERROR] "
@@ -80,9 +82,16 @@ BUILDER_LOG(BUILDER_INFO, "Rebuilding...");\
 struct BuildCmd cmd = {0};\
 cmd.arena = mm_scratch_arena();\
 cmd.list.arena = mm_scratch_arena(); \
-bs_cmd_append(&cmd, string_u8_litexpr("clang"));\
+bs_get_builder_command(&cmd);\
 String8* command = bs_cmd_construct_command(&cmd.arena, &cmd);\
 BUILDER_LOG_ARGS(BUILDER_INFO, "Final command:\n\t%s", command->str);\
+BUILDER_LOG(BUILDER_INFO, "EXECUTING...");\
+if (!bs_run_command(command)) {\
+bs_reset_files();\
+exit(1);\
+}\
+BUILDER_LOG(BUILDER_INFO, "Succeded!");\
+exit(0);\
 } \
 )
 

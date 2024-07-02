@@ -66,7 +66,6 @@ struct String_Const_Char {
 
 // Memory
 
-#define BYTE(x) (x)
 #define KB(x) ((x << 10))
 #define MB(x) ((x << 20))
 #define MM_COMMIT_BLOCK_SIZE MB(64)

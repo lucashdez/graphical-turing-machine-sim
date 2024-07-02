@@ -1,7 +1,43 @@
 #include "build.h"
 #include <stdlib.h>
 
-function i8 bs_compare_file_time(struct FM_File* a, struct FM_File* b) {
+function i32
+bs_run_command(String8* command) {
+    i32 result = true;
+    if (command->size == 0) {
+        BUILDER_LOG(BUILDER_ERROR, "Cannot run a void command.");
+        return false;
+    }
+#ifdef _WIN32
+    STARTUPINFOA siStartInfo = {0};
+    PROCESS_INFORMATION piProcInfo = {0};
+    BOOL bSuccess = CreateProcessA(0, (char*)command->str, 0, 0, true, 0, 0, 0, &siStartInfo, &piProcInfo);
+    if (!bSuccess) {
+        BUILDER_LOG_ARGS(BUILDER_ERROR, "Cannot create a child process: %lu", GetLastError());
+        result = false;
+        //a
+    }
+#else
+    // TODO LINUX FORK
+#endif
+    return(result);
+}
+
+function void 
+bs_get_builder_command(struct BuildCmd *cmd) {
+    bs_cmd_append(cmd, string_u8_litexpr("clang -g"));
+#ifdef _WIN32
+    bs_cmd_append(cmd, string_u8_litexpr("-gcodeview"));
+#endif
+    bs_cmd_append(cmd, string_u8_litexpr("-Isrc/include build.c -o"));
+#ifdef _WIN32
+    bs_cmd_append(cmd, string_u8_litexpr("build_all.exe"));
+#else
+    bs_cmd_append(cmd, string_u8_litexpr("build_all"));
+#endif
+}
+
+function i32 bs_compare_file_time(struct FM_File* a, struct FM_File* b) {
     return a->info.mod_time < b->info.mod_time? -1 : a->info.mod_time == b->info.mod_time? 0 : 1;
 }
 
@@ -46,7 +82,7 @@ bs_get_file_from_path(String8 path) {
             return result;
         }
         // NOTE Something we must do with the | operator? 
-        result.info.mod_time = tmp_filetime.dwHighDateTime + tmp_filetime.dwLowDateTime;
+        result.info.mod_time = tmp_filetime.dwHighDateTime | tmp_filetime.dwLowDateTime;
     }
     win32_close_file(file);
 #else
@@ -82,9 +118,9 @@ bs_cmd_append(struct BuildCmd *cmd, String8 str) {
 function void 
 bs_reset_files() {
 #ifdef _WIN32
-    if(!MoveFileExA("build.old", "build_all.exe", 0x1)) {
-        BUILDER_LOG_ARGS(BUILDER_ERROR, "Could not reset files: %lu", GetLastError());
-    }
+	if(!MoveFileExA("build.old", "build_all.exe", 0x1)) {
+		BUILDER_LOG_ARGS(BUILDER_ERROR, "Could not reset files: %lu", GetLastError());
+	}
 #else
     
 #endif
@@ -127,11 +163,13 @@ int main(int argc, char **argv) {
     struct BuildCmd cmd = {};
     cmd.arena = mm_scratch_arena();
     cmd.list.arena = mm_scratch_arena();
+    bs_cmd_append(&cmd, string_u8_litexpr("Jej"));
     {
         struct Arena scratch = mm_scratch_arena();
         String8 *command = bs_cmd_construct_command(&scratch, &cmd);
         printf("%s\n", (char*)command->str);
     }
+    
 }
 
 
