@@ -17,10 +17,11 @@ enum Week_days {
 #ifdef __linux__
 int main(int argc, char **argv) {
     struct MM_BaseMemory* mem = mm_create_malloc_base_memory();
+	printf("AAA");
 }
 #endif
 
-function i32 _start_function() {
+static i32 _start_function() {
     printf("Hello, both\n");
     return(0);
 }
