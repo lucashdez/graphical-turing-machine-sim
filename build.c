@@ -10,6 +10,9 @@ bs_run_command(String8* command) {
     }
 #ifdef _WIN32
     STARTUPINFOA siStartInfo = {0};
+    siStartInfo.hStdInput = stdin;
+    siStartInfo.hStdOutput = stdout;
+    siStartInfo.hStdError = stderr;
     PROCESS_INFORMATION piProcInfo = {0};
     BOOL bSuccess = CreateProcessA(0, (char*)command->str, 0, 0, true, 0, 0, 0, &siStartInfo, &piProcInfo);
     if (!bSuccess) {
@@ -159,15 +162,27 @@ bs_cmd_run(struct BuildCmd *cmd) {
 }
 
 int main(int argc, char **argv) {
+    GLOBAL_BASE_ALLOCATOR = mm_create_malloc_base_memory();
     GO_REBUILD_YOURSELF(argc, argv);
     struct BuildCmd cmd = {};
     cmd.arena = mm_scratch_arena();
     cmd.list.arena = mm_scratch_arena();
-    bs_cmd_append(&cmd, string_u8_litexpr("Jej"));
+    bs_cmd_append(&cmd, string_u8_litexpr("clang -g"));
+#ifdef _WIN32
+    bs_cmd_append(&cmd, string_u8_litexpr("-gcodeview"));
+#endif
+    bs_cmd_append(&cmd, string_u8_litexpr("-Isrc/include -Isrc/impls"));
+    bs_cmd_append(&cmd, string_u8_litexpr("src/main.c"));
+    bs_cmd_append(&cmd, string_u8_litexpr("-o "));
+#ifdef _WIN32
+    bs_cmd_append(&cmd, string_u8_litexpr("build/gtms.exe"));
+#else
+    bs_cmd_append(&cmd, string_u8_litexpr("build/gtms"));
+#endif
     {
         struct Arena scratch = mm_scratch_arena();
         String8 *command = bs_cmd_construct_command(&scratch, &cmd);
-        printf("%s\n", (char*)command->str);
+        bs_run_command(command);
     }
     
 }

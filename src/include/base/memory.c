@@ -72,7 +72,8 @@ mm_make_arena(struct MM_BaseMemory *base) {
 
 function struct 
 Arena mm_scratch_arena() {
-    struct Arena result = mm_make_arena_reserve(mm_create_malloc_base_memory(), KB(64));
+    // TODO CHANGE THIS TO GLOBAL
+    struct Arena result = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, KB(64));
     return result;
 }
 

@@ -69,30 +69,31 @@ function i32 bs_run_command(String8* command);
 
 #include <assert.h>
 
-#define GO_REBUILD_YOURSELF(argc, argv) \
-Statement(const char *source_path = __FILE__; \
-assert(argc >= 1); \
-const char *binary_path = argv[0]; \
-if (bs_needs_rebuild(string_u8_litexpr(binary_path), string_u8_litexpr(source_path))) {\
+#define GO_REBUILD_YOURSELF(argc, argv)                                                                \
+Statement(const char *source_path = __FILE__;                                                      \
+assert(argc >= 1);                                                                       \
+const char *binary_path = argv[0];                                                       \
+if (bs_needs_rebuild(string_u8_litexpr(binary_path), string_u8_litexpr(source_path))) {  \
 if(!bs_rename_file(string_u8_litexpr(binary_path), string_u8_litexpr("build.old"))) {\
-bs_reset_files(); /* Reset the modified files */ \
-exit(1); /* Here we cancel everithing */ \
-}\
-BUILDER_LOG(BUILDER_INFO, "Rebuilding...");\
-struct BuildCmd cmd = {0};\
-cmd.arena = mm_scratch_arena();\
-cmd.list.arena = mm_scratch_arena(); \
-bs_get_builder_command(&cmd);\
-String8* command = bs_cmd_construct_command(&cmd.arena, &cmd);\
-BUILDER_LOG_ARGS(BUILDER_INFO, "Final command:\n\t%s", command->str);\
-BUILDER_LOG(BUILDER_INFO, "EXECUTING...");\
-if (!bs_run_command(command)) {\
-bs_reset_files();\
-exit(1);\
-}\
-BUILDER_LOG(BUILDER_INFO, "Succeded!");\
-exit(0);\
-} \
+bs_reset_files(); /* Reset the modified files */                                 \
+exit(1); /* Here we cancel everithing */                                         \
+}                                                                                    \
+BUILDER_LOG(BUILDER_INFO, "Rebuilding...");                                          \
+struct BuildCmd cmd = {0};                                                           \
+cmd.arena = mm_scratch_arena();                                                      \
+cmd.list.arena = mm_scratch_arena();                                                 \
+bs_get_builder_command(&cmd);                                                        \
+String8* command = bs_cmd_construct_command(&cmd.arena, &cmd);                       \
+BUILDER_LOG_ARGS(BUILDER_INFO, "Final command:\n\t%s", command->str);                \
+BUILDER_LOG(BUILDER_INFO, "EXECUTING...");                                           \
+if (!bs_run_command(command)) {                                                      \
+bs_reset_files();                                                                \
+exit(1);                                                                         \
+}                                                                                    \
+BUILDER_LOG(BUILDER_INFO, "Succeded!");                                              \
+BUILDER_LOG(BUILDER_INFO, "Try to run again...");                                    \
+exit(0);                                                                             \
+}                                                                                        \
 )
 
 

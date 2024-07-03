@@ -7,13 +7,25 @@
 # define APIENTRY __stdcall
 
 # define CALLBACK __stdcall
+typedef unsigned short ATOM;
 typedef int BOOL;
 typedef u8 BYTE;
 typedef unsigned long DWORD;
 typedef void* HANDLE;
+typedef void* HBRUSH;
+typedef void* HCURSOR;
+typedef void* HICON;
 typedef void* HINSTANCE;
+typedef void* HMENU;
+typedef void* HWND;
 
-typedef BYTE* LPBYTE;
+#ifdef _WIN64
+typedef i64 LONG_PTR; 
+#else
+typedef long LONG_PTR;
+#endif
+typedef LONG_PTR LPARAM;
+typedef u8* LPBYTE;
 typedef const char* LPCSTR;
 #ifdef _WIN64
 typedef u32* LPTSTR;
@@ -23,6 +35,7 @@ typedef const char* LPTSTR;
 typedef char* LPSTR;
 typedef void* LPVOID;
 typedef const void* LPCVOID;
+typedef LONG_PTR LRESULT;
 typedef const void* PCVOID;
 typedef void* PVOID;
 #ifdef _WIN64
@@ -30,8 +43,16 @@ typedef u64 SIZE_T;
 #else
 typedef unsigned long SIZE_T;
 #endif
+typedef unsigned int UINT;
 typedef unsigned short WORD;
+#ifdef _WIN64
+typedef i64 WPARAM;
+#else
+typedef int WPARAM;
+#endif
 
+// Function types
+typedef LRESULT WNDPROC(HWND, UINT, WPARAM, LPARAM);
 
 # define WINAPI __stdcall 
 
@@ -42,7 +63,7 @@ typedef struct _FILETIME {
     DWORD dwHighDateTime;
 } FILETIME, *PFILETIME, *LPFILETIME;
 
-typedef struct {
+typedef struct _PROCESS_INFORMATION {
     HANDLE hProcess;
     HANDLE hThread;
     DWORD dwProcessId;
@@ -76,6 +97,21 @@ typedef struct _STARTUPINFOA {
     HANDLE hStdError;
 } STARTUPINFOA, *LPSTARTUPINFOA;
 
+typedef struct tagWNDCLASSEXA {
+    UINT      cbSize;
+    UINT      style;
+    WNDPROC*  lpfnWndProc;
+    int       cbClsExtra;
+    int       cbWndExtra;
+    HINSTANCE hInstance;
+    HICON     hIcon;
+    HCURSOR   hCursor;
+    HBRUSH    hbrBackground;
+    LPCSTR    lpszMenuName;
+    LPCSTR    lpszClassName;
+    HICON     hIconSm;
+} WNDCLASSEXA, *PWNDCLASSEXA, *NPWNDCLASSEXA, *LPWNDCLASSEXA;
+
 
 
 // INTERN FUNCTIONS
@@ -87,11 +123,14 @@ extern void CloseHandle(HANDLE handle);
 extern long CompareFileTime(const FILETIME* lpFileTime1, const FILETIME* lpFileTime2);
 extern HANDLE CreateFileA(LPCSTR lpFileHandle, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE htemplateFile);
 extern BOOL CreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
+extern HWND CreateWindowExA(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
 
 extern DWORD FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, va_list *Arguments);
 extern BOOL GetFileTime(HANDLE hFile, LPFILETIME lpCreationTime, LPFILETIME lpLastAccessTime, LPFILETIME lpLastWriteTime);
 extern DWORD GetLastError();
+extern HANDLE GetStdHandle(DWORD nStdHandle); 
 extern BOOL MoveFileExA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, DWORD dwFlags);
+extern ATOM RegisterClassExA(const WNDCLASSEXA *unnamedParam1);
 extern int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow);
 
 #endif //WIN32_H

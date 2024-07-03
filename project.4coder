@@ -45,6 +45,5 @@ commands = {
 fkey_command = {
     .F1 = "build",
     .F2 = "run",
-    .F3 = "run_builder",
     .F5 = "build_builder",
 };

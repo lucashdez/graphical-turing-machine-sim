@@ -25,23 +25,24 @@ struct Arena {
 };
 
 // UTILITIES
-function void* mm_memset(void* dest, register int val, register u64 len);
-function void* mm_memcpy(void* dest, void* src, u64 len);
-function void* mm_memcpymv(void* dest, void* src, u64 len);
+static void* mm_memset(void* dest, register int val, register u64 len);
+static void* mm_memcpy(void* dest, void* src, u64 len);
+static void* mm_memcpymv(void* dest, void* src, u64 len);
 
-function struct MM_BaseMemory* mm_create_malloc_base_memory(void);
-function void mm_change_memory_noop(void* ctx, void* ptr, u64 size) {}
-function struct Arena mm_make_arena_reserve(struct MM_BaseMemory *base, u64 reserve_size);
-function struct Arena mm_make_arena(struct MM_BaseMemory *base);
-function struct Arena mm_scratch_arena();
-
-
-function void mm_arena_release(struct Arena *arena);
-function void* mm_arena_push(struct Arena *arena, u64 size);
-function void* mm_arena_push_zeros(struct Arena *arena, u64 size);
-function void mm_arena_pop_to(struct Arena *arena, u64 pos);
+static struct MM_BaseMemory* mm_create_malloc_base_memory(void);
+static void mm_change_memory_noop(void* ctx, void* ptr, u64 size) {}
+static struct Arena mm_make_arena_reserve(struct MM_BaseMemory *base, u64 reserve_size);
+static struct Arena mm_make_arena(struct MM_BaseMemory *base);
+static struct Arena mm_scratch_arena();
 
 
+static void mm_arena_release(struct Arena *arena);
+static void* mm_arena_push(struct Arena *arena, u64 size);
+static void* mm_arena_push_zeros(struct Arena *arena, u64 size);
+static void mm_arena_pop_to(struct Arena *arena, u64 pos);
 
+
+// GLOBALS
+static struct MM_BaseMemory* GLOBAL_BASE_ALLOCATOR = {0};
 
 #endif //MEMORY_H
