@@ -1,3 +1,5 @@
 * Graphical-Turing-Machine-Sim
 Something
-* TODO qjoieqoi
+* TODO Make Unix window thing 
+** TODO Create window
+** TODO Create main loop
