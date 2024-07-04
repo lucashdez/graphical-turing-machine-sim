@@ -4,12 +4,6 @@
 #ifndef BASE_H
 #define BASE_H
 
-#define function static
-#define internal static
-#define local_persist static
-#define global static
-
-
 typedef unsigned char u8;
 typedef signed   char i8;
 typedef unsigned short u16;

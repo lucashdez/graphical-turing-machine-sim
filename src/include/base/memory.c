@@ -1,6 +1,6 @@
 #include "memory.h"
 
-function void* 
+static void* 
 mm_memset(void* dest, register int val, register u64 len) {
     register u8* ptr = (u8*)dest;
     while(len-- > 0) {
@@ -9,7 +9,7 @@ mm_memset(void* dest, register int val, register u64 len) {
     return dest;
 }
 
-function void* 
+static void* 
 mm_memcpy(void* dest, void* src, u64 len) {
     char *d = dest;
     const char *s = src;
@@ -19,32 +19,32 @@ mm_memcpy(void* dest, void* src, u64 len) {
     return dest;
 }
 
-function void* 
+static void* 
 mm_memcpymv(void* dest, void* src, u64 len) {
     char *d = dest;
     const char *s = src;
     while(len-- && *(s+1) != 0) {
         *d++ = *s++;
-        dest++;
+        dest = (void*)d;
     }
     return dest;
 }
 
 // TODO Own Memory management with virtualalloc
 
-function void* 
+static void* 
 mm_malloc_reserve(void* ctx, u64 size) {
     return (malloc(size));
 }
 
-function void
+static void
 mm_release(void* ctx, void* ptr, u64 size) {
     free(ptr);
 }
 
-function struct MM_BaseMemory*
+static struct MM_BaseMemory*
 mm_create_malloc_base_memory(void) {
-    local_persist struct MM_BaseMemory memory = {};
+    static struct MM_BaseMemory memory = {};
     if (memory.reserve == 0) {
         memory.reserve = mm_malloc_reserve;
         memory.commit = mm_change_memory_noop;
@@ -55,7 +55,7 @@ mm_create_malloc_base_memory(void) {
 }
 
 
-function struct Arena 
+static struct Arena 
 mm_make_arena_reserve(struct MM_BaseMemory *base, u64 reserve_size) {
     struct Arena result = {};
     result.base = base;
@@ -64,26 +64,26 @@ mm_make_arena_reserve(struct MM_BaseMemory *base, u64 reserve_size) {
     return (result); 
 }
 
-function struct Arena
+static struct Arena
 mm_make_arena(struct MM_BaseMemory *base) {
     struct Arena result =  mm_make_arena_reserve(base, KB(64));
     return (result);
 }
 
-function struct 
+static struct 
 Arena mm_scratch_arena() {
     // TODO CHANGE THIS TO GLOBAL
     struct Arena result = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, KB(64));
     return result;
 }
 
-function void 
+static void 
 mm_arena_release(struct Arena *arena) {
     struct MM_BaseMemory *base = arena->base;
     base->release(base->ctx, arena->memory, arena->cap);
 } 
 
-function void* 
+static void* 
 mm_arena_push(struct Arena *arena, u64 size) {
     void* result = NULL;
     if (arena->pos + size <= arena->cap) {
@@ -99,7 +99,7 @@ mm_arena_push(struct Arena *arena, u64 size) {
     return (result);
 }
 
-function void* 
+static void* 
 mm_arena_push_zeros(struct Arena *arena, u64 size) {
     void* result = NULL;
     if (arena->pos + size <= arena->cap) {

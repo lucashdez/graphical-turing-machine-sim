@@ -1,8 +1,9 @@
 #ifdef _WIN32
 #ifndef WIN32_H
 #define WIN32_H
+#include "windows.h"
 
-
+#if 0
 //~ NOTE(lucashdez): Types
 # define APIENTRY __stdcall
 
@@ -17,7 +18,9 @@ typedef void* HCURSOR;
 typedef void* HICON;
 typedef void* HINSTANCE;
 typedef void* HMENU;
+typedef void* HMODULE;
 typedef void* HWND;
+typedef long LONG;
 
 #ifdef _WIN64
 typedef i64 LONG_PTR; 
@@ -63,6 +66,7 @@ typedef struct _FILETIME {
     DWORD dwHighDateTime;
 } FILETIME, *PFILETIME, *LPFILETIME;
 
+
 typedef struct _PROCESS_INFORMATION {
     HANDLE hProcess;
     HANDLE hThread;
@@ -97,6 +101,36 @@ typedef struct _STARTUPINFOA {
     HANDLE hStdError;
 } STARTUPINFOA, *LPSTARTUPINFOA;
 
+
+typedef struct tagPOINT {
+  LONG x;
+  LONG y;
+} POINT, *PPOINT, *NPPOINT, *LPPOINT;
+
+typedef struct tagMSG {
+  HWND   hwnd;
+  UINT   message;
+  WPARAM wParam;
+  LPARAM lParam;
+  DWORD  time;
+  POINT  pt;
+  DWORD  lPrivate;
+} MSG, *PMSG, *NPMSG, *LPMSG;
+
+
+typedef struct tagWNDCLASSA {
+  UINT      style;
+  WNDPROC*  lpfnWndProc;
+  int       cbClsExtra;
+  int       cbWndExtra;
+  HINSTANCE hInstance;
+  HICON     hIcon;
+  HCURSOR   hCursor;
+  HBRUSH    hbrBackground;
+  LPCSTR    lpszMenuName;
+  LPCSTR    lpszClassName;
+} WNDCLASSA, *PWNDCLASSA, *NPWNDCLASSA, *LPWNDCLASSA;
+
 typedef struct tagWNDCLASSEXA {
     UINT      cbSize;
     UINT      style;
@@ -124,14 +158,20 @@ extern long CompareFileTime(const FILETIME* lpFileTime1, const FILETIME* lpFileT
 extern HANDLE CreateFileA(LPCSTR lpFileHandle, DWORD dwDesiredAccess, DWORD dwSharedMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE htemplateFile);
 extern BOOL CreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
 extern HWND CreateWindowExA(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
-
+extern BOOL DispatchMessageA(const MSG *lpMsg);
 extern DWORD FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, va_list *Arguments);
 extern BOOL GetFileTime(HANDLE hFile, LPFILETIME lpCreationTime, LPFILETIME lpLastAccessTime, LPFILETIME lpLastWriteTime);
 extern DWORD GetLastError();
+extern BOOL GetMessageA(LPMSG lpMsg, HWND  hWnd, UINT  wMsgFilterMin, UINT  wMsgFilterMax);
+extern HMODULE GetModuleHandleA(LPCSTR lpModuleName);
 extern HANDLE GetStdHandle(DWORD nStdHandle); 
 extern BOOL MoveFileExA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, DWORD dwFlags);
+extern BOOL ShowWindow(HWND hWnd, int nCmdShow);
+extern ATOM RegisterClassA(const WNDCLASSA *lpWndClass);
 extern ATOM RegisterClassExA(const WNDCLASSEXA *unnamedParam1);
+extern BOOL TranslateMessage(const MSG *lpMsg);
 extern int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow);
 
+#endif // if 0
 #endif //WIN32_H
 #endif
