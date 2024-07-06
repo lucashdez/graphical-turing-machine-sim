@@ -3,26 +3,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-//    PLATFORM
-#include "win32.h"
-
-// DEFINITIONS
-#include "win32.c"
-
-//    PLATFORM
-
-enum Week_days {
-    WD_Monday
-};
+//####################
+//  PLATFORM WIN32
+#ifdef _WIN32
+#  include "win32.h"
+#endif
+//  PLATFORM LINUX 
 #ifdef __linux__
-int main(int argc, char **argv) {
-    struct MM_BaseMemory* mem = mm_create_malloc_base_memory();
-	printf("AAA");
-}
+#  include "linux.h"
 #endif
 
-static i32 _start_function() {
-    printf("Hello, both\n");
-    return(0);
-}
+// DEFINITIONS
 
+
+//####################
+//  PLATFORM WIN32
+#ifdef _WIN32
+#  include "win32.c"
+#endif
+
+//  PLATFORM LINUX
+#ifdef __linux__
+#  include "linux.c"
+#endif
