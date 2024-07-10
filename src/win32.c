@@ -62,7 +62,7 @@ LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wParams, LPARAM lParams) 
 
 
 // The string that appears in the application's title bar.
-static TCHAR szTitle[] = ("Windows Desktop Guided Tour Application");
+static TCHAR szTitle[] = ("Title of window");
 
 // Stored instance handle for use in Win32 API calls such as FindResource
 HINSTANCE hInst;
@@ -89,7 +89,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdSh
 	wcex.hIconSm        = LoadIcon(wcex.hInstance, IDI_APPLICATION);
 
 	if (!RegisterClassEx(&wcex)) {
-
 		return 1;
 	}
 
@@ -113,13 +112,15 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdSh
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
-
+	VulkanInitData vk_init_data = {0};
+	VulkanData vk_data = {0};
+	vk_init_data.hwnd = hWnd;
+	lhvk_init_vulkan(vk_init_data, &vk_data);
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0) > 0) {
 		if(msg.message == WM_QUIT) {
 			break;
 		} 
-
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
