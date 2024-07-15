@@ -34,5 +34,17 @@ lhvk_init_vulkan(VulkanInitData vulkan_init_data, VulkanData *vulkan_data) {
 		printf("FAILED TO DETECT DEVICES");
 		return(false);
 	}
+
+	VkPhysicalDevice devices[device_count]; 
+	vkEnumeratePhysicalDevices(vulkan_data->instance, &device_count, devices);
+	vulkan_data->physical_device = devices[0]; 
+
+	VkDeviceQueueCreateInfo queue_create_info = {};
+	queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queue_create_info.queueFamilyIndex = 0;
+	queue_create_info.queueCount = 1;
+	float queue_priority = 1.0f;
+	queue_create_info.pQueuePriorities = &queue_priority;
+	
 	return(true);
 }

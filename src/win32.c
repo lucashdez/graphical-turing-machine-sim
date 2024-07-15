@@ -112,11 +112,15 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdSh
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
+
+	/* Vulkan initialization */
 	VulkanInitData vk_init_data = {0};
 	VulkanData vk_data = {0};
 	vk_init_data.hwnd = hWnd;
 	lhvk_init_vulkan(vk_init_data, &vk_data);
+	// End of vulkan init
 	MSG msg;
+	// MAIN LOOP
 	while (GetMessage(&msg, NULL, 0, 0) > 0) {
 		if(msg.message == WM_QUIT) {
 			break;
