@@ -54,6 +54,7 @@ static b32 lhvk_create_physical_device(VulkanInitData vulkan_init_data, VulkanDa
 static b32 lhvk_create_device(VulkanInitData vulkan_init_data, VulkanData *vulkan_data);
 static b32 lhvk_create_swapchain(VulkanInitData vulkan_init_data, VulkanData *vulkan_data);
 static b32 lhvk_create_image_views(VulkanData *vulkan_data);
+static b32 lhvk_create_render_pass(VulkanData *vulkan_data);
 
 
 

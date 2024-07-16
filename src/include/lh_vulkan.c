@@ -6,10 +6,10 @@ lhvk_init_vulkan(VulkanInitData vulkan_init_data, VulkanData *vulkan_data) {
 	lhvk_create_device(vulkan_init_data, vulkan_data);
 	lhvk_create_swapchain(vulkan_init_data,vulkan_data);
 	lhvk_create_image_views(vulkan_data);
+	lhvk_create_render_pass(vulkan_data);
 
 	return(true);
 }
-
 
 static b32
 lhvk_create_instance(VulkanInitData vulkan_init_data, VulkanData *vulkan_data) {
@@ -160,14 +160,20 @@ lhvk_create_device(VulkanInitData vulkan_init_data, VulkanData *vulkan_data) {
 
 static b32
 lhvk_create_swapchain(VulkanInitData vulkan_init_data, VulkanData *vulkan_data) {
+	print("Creating swapchain...\n");
 	VkSwapchainCreateInfoKHR swapchain_create_info = {};
 	swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchain_create_info.surface = vulkan_data->surface;
 	swapchain_create_info.minImageCount = 2;
 	swapchain_create_info.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
 	swapchain_create_info.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-	// Could explode
-	swapchain_create_info.imageExtent = (VkExtent2D){800, 600};
+	// Surface 
+	VkSurfaceCapabilitiesKHR surface_capabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vulkan_data->physicalDevice,
+											  vulkan_data->surface,
+											  &surface_capabilities);
+	swapchain_create_info.imageExtent = surface_capabilities.currentExtent;
+	//~
 	swapchain_create_info.imageArrayLayers = 1;
 	swapchain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -181,6 +187,7 @@ lhvk_create_swapchain(VulkanInitData vulkan_init_data, VulkanData *vulkan_data) 
 		print("Failed to create swapchain\n");
 		return(false);
 	}
+	print("Done!\n");
 	return(true);
 }
 
@@ -215,6 +222,42 @@ lhvk_create_image_views(VulkanData *vulkan_data) {
 							 &vulkan_data->swapchainImageViews.image_views[i]) != VK_SUCCESS) {
 			print("CANNOT CREATE IMAGE VIEW");
 		}
+	}
+	return(true);
+}
+
+static b32
+lhvk_create_render_pass(VulkanData *vulkan_data) {
+	VkAttachmentDescription color_attachment = {};
+	color_attachment.format = VK_FORMAT_R8G8B8A8_SRGB;
+	color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    VkAttachmentReference color_attachment_ref = {};
+    color_attachment_ref.attachment = 0;
+    color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkSubpassDescription subpass = {};
+    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount = 1;
+    subpass.pColorAttachments = &color_attachment_ref;
+
+    VkRenderPassCreateInfo render_pass_info = {};
+    render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    render_pass_info.attachmentCount = 1;
+    render_pass_info.pAttachments = &color_attachment;
+    render_pass_info.subpassCount = 1;
+    render_pass_info.pSubpasses = &subpass;
+
+	if(vkCreateRenderPass(vulkan_data->device, &render_pass_info, 0, &vulkan_data->renderPass) != VK_SUCCESS) {
+		print("CANNOT CREATE RENDER PASS");
+		return(false);
 	}
 	return(true);
 }
