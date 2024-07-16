@@ -99,7 +99,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdSh
 							   szTitle,
 							   WS_OVERLAPPEDWINDOW,
 							   CW_USEDEFAULT, CW_USEDEFAULT,
-							   500, 100,
+							   800, 600,
 							   NULL,
 							   NULL,
 							   hInstance,
@@ -117,6 +117,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdSh
 	VulkanInitData vk_init_data = {0};
 	VulkanData vk_data = {0};
 	vk_init_data.hwnd = hWnd;
+	vk_init_data.hinstance = hInstance;
 	lhvk_init_vulkan(vk_init_data, &vk_data);
 	// End of vulkan init
 	MSG msg;

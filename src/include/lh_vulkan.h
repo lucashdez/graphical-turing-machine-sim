@@ -1,6 +1,12 @@
 #ifndef LH_VULKAN_H
 #define LH_VULKAN_H
 
+#ifdef _WIN32
+#  define print(s) OutputDebugStringA(s)
+#else
+#  define print(s) printf(s)
+#endif
+
 typedef struct tag_VulkanImages{
 	struct Arena arena;
 	VkImage* images;
@@ -24,7 +30,7 @@ typedef struct tag_VulkanCommandBugger {
 typedef struct tag_VulkanData {
   VkInstance instance;
   VkSurfaceKHR surface;
-  VkPhysicalDevice physical_device;
+  VkPhysicalDevice physicalDevice;
   VkDevice device;
   VkQueue graphicsQueue;
   VkSwapchainKHR swapchain;
@@ -37,9 +43,18 @@ typedef struct tag_VulkanData {
 } VulkanData;
 
 typedef struct tag_VulkanInitData {
-	void* hwnd;
+	HWND hwnd;
+	HINSTANCE hinstance;
 } VulkanInitData;
 
 static b32 lhvk_init_vulkan(VulkanInitData vulkan_init_data, VulkanData *vulkan_data);
+static b32 lhvk_create_instance(VulkanInitData vulkan_init_data, VulkanData *vulkan_data);
+static b32 lhvk_create_window_surface(VulkanInitData vulkan_init_data, VulkanData *vulkan_data);
+static b32 lhvk_create_physical_device(VulkanInitData vulkan_init_data, VulkanData *vulkan_data);
+static b32 lhvk_create_device(VulkanInitData vulkan_init_data, VulkanData *vulkan_data);
+static b32 lhvk_create_swapchain(VulkanInitData vulkan_init_data, VulkanData *vulkan_data);
+static b32 lhvk_create_image_views(VulkanData *vulkan_data);
+
+
 
 #endif
