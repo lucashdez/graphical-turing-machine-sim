@@ -10,11 +10,19 @@ struct FM_FileInfo {
 };
 
 struct FM_File{
-    struct Arena* arena;
+    struct Arena arena;
     void* handle;
     int fd;
     String8 path;
+	String8 contents;
     struct FM_FileInfo info;
+	u64 size;
 };
+
+
+static struct  FM_File fm_open_file(String8 path, String8 mode);
+static void fm_read_file(struct FM_File *file); 
+static u64 fm_file_size(struct FM_File *file);
+
 
 #endif //FILE_MANAGER_H

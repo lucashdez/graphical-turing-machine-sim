@@ -47,7 +47,7 @@ struct String_Const_Char {
 #define GlueStr(Astr, Bstr) Astr Bstr
 
 
-#define string_u8_litexpr(S) (String8) {(u8*)S, sizeof(S)/sizeof(u8)}
+#define string_u8_litexpr(S) (String8) {(u8*)S, sizeof(S)/sizeof(u8) - 1}
 
 // Math
 #define Min(a, b) a<b?a:b

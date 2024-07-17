@@ -21,14 +21,6 @@ win32_close_file(struct FM_File file) {
 	CloseHandle(file.handle);
 }
 
-void DrawPanel(HDC hdc, int x, int y, int width, int height, COLORREF color) {
-    HBRUSH hBrush = CreateSolidBrush(color);
-    RECT rect = { x, y, x + width, y + height };
-    FillRect(hdc, &rect, hBrush);
-    FrameRect(hdc, &rect, (HBRUSH)GetStockObject(BLACK_BRUSH));
-    DeleteObject(hBrush);
-}
-
 
 LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wParams, LPARAM lParams) {
 	LRESULT result; 
@@ -36,22 +28,6 @@ LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wParams, LPARAM lParams) 
 	case WM_DESTROY: {
 		PostQuitMessage(0);
 	}break;
-
-	case WM_PAINT: {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(handle, &ps);
-		RECT rect;
-		GetClientRect(handle, &rect);
-        // Dibujar paneles virtuales
-		LONG swidth = (rect.right-rect.left)/2;
-		LONG sheigth =(rect.bottom-rect.top)/2;
-        DrawPanel(hdc, rect.left, rect.top, swidth, sheigth, RGB(255, 0, 0));  // Panel rojo
-        DrawPanel(hdc, rect.right - swidth, rect.top, swidth, sheigth, RGB(0, 255, 0)); // Panel verde
-        DrawPanel(hdc, rect.left, rect.top + sheigth, swidth, sheigth, RGB(0, 0, 255)); // Panel azul
-        DrawPanel(hdc, rect.left + swidth, rect.top + sheigth, swidth, sheigth, RGB(255, 255, 0)); // Panel amarillo
-
-        EndPaint(handle, &ps);
-	} break;
 
 	default: 
 		result = DefWindowProc(handle, msg, wParams, lParams); 
@@ -118,6 +94,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdSh
 	VulkanData vk_data = {0};
 	vk_init_data.hwnd = hWnd;
 	vk_init_data.hinstance = hInstance;
+	vk_init_data.argv = &pCmdLine;
 	lhvk_init_vulkan(vk_init_data, &vk_data);
 	// End of vulkan init
 	MSG msg;

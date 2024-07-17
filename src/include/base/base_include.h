@@ -10,5 +10,6 @@
 
 // Definitions
 #include "memory.c"
+#include "file_manager.c"
 
 #endif //BASE_INCLUDE_H

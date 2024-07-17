@@ -45,6 +45,7 @@ typedef struct tag_VulkanData {
 typedef struct tag_VulkanInitData {
 	HWND hwnd;
 	HINSTANCE hinstance;
+	char** argv;
 } VulkanInitData;
 
 static b32 lhvk_init_vulkan(VulkanInitData vulkan_init_data, VulkanData *vulkan_data);
