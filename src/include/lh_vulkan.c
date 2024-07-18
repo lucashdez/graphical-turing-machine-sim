@@ -8,7 +8,7 @@ lhvk_init_vulkan(VulkanInitData vulkan_init_data, VulkanData *vulkan_data) {
 	lhvk_create_image_views(vulkan_data);
 	lhvk_create_render_pass(vulkan_data);
 	struct FM_File file = fm_open_file(string_u8_litexpr("C:/projects/graphical-turing-machine-sim/src/shaders/vert.spv"), string_u8_litexpr("r"));
-	u64 file_size = fm_file_size(&file);
+	fm_file_size(&file);
 	fm_read_file(&file);
 	return(true);
 }
