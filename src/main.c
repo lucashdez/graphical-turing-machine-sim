@@ -1,7 +1,7 @@
 //####################
 //  PLATFORM WIN32
 #ifdef _WIN32
-#  include "win32.h"
+#  include "include/win32.h"
 #endif
 //  PLATFORM LINUX 
 #ifdef __linux__
@@ -9,7 +9,7 @@
 #endif
 
 // HEADERS
-#include "base/base_include.h"
+#include "include/base/base_include.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -20,7 +20,7 @@
 #endif
 #include "vulkan/vulkan.h"
 
-#include "lh_vulkan.h"
+#include "include/lh_vulkan.h"
 
 
 // DEFINITIONS
@@ -28,7 +28,7 @@
 
 //####################
 //    Graphics
-#include "lh_vulkan.c"
+#include "include/lh_vulkan.c"
 
 //####################
 //  PLATFORM WIN32
