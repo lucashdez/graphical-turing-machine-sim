@@ -4,6 +4,10 @@
 #define LINUX_H
 
 #include <X11/Xlib.h>
+#include <sys/stat.h>
+#include <errno.h>
 
+internal
+struct stat linux_open_file(); 
 
 #endif //LINUX_H

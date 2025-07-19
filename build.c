@@ -18,10 +18,9 @@ bs_run_command(String8* command) {
     if (!bSuccess) {
         BUILDER_LOG_ARGS(BUILDER_ERROR, "Cannot create a child process: %lu", GetLastError());
         result = false;
-        //a
     }
 #else
-    // TODO LINUX FORK
+    // TODO(lucashdez) LINUX FORK
 #endif
     return(result);
 }
@@ -32,7 +31,7 @@ bs_get_builder_command(struct BuildCmd *cmd) {
 #ifdef _WIN32
     bs_cmd_append(cmd, string_u8_litexpr("-gcodeview"));
 #endif
-    bs_cmd_append(cmd, string_u8_litexpr("-Isrc/include build.c -o"));
+    bs_cmd_append(cmd, string_u8_litexpr("-Isrc/include build.c -o "));
 #ifdef _WIN32
     bs_cmd_append(cmd, string_u8_litexpr("build_all.exe"));
 #else
@@ -54,9 +53,9 @@ bs_rename_file(String8 old_path, String8 new_path) {
     }
 #else
     //linux
-    //if (!rename(old_path.str, new_path.str)) {
-    //
-    //}
+    if (!rename((const char*)old_path.str, (const char*)new_path.str)) {
+        //TODO(lucashdez): log Errors
+    }
 #endif
     return true;
 }
@@ -89,10 +88,18 @@ bs_get_file_from_path(String8 path) {
     }
     win32_close_file(file);
 #else
-    // TODO Lenus get filetimes thing
-    struct Stat buf = {};
-    stat((char*)path.str, &buf);
-    printf("%lld", buf.st_mtime);
+    //aa
+    struct stat buf = {0};
+    i32 stat_result = stat((char*)path.str, &buf);
+    // If we had an error we return
+    if (stat_result != 0)
+    {
+        BUILDER_LOG_ARGS(BUILDER_ERROR, "Could not open %s %d", (char*)path.str, errno);
+        return(result);
+    }
+    printf("st_mtime: %ld\n", buf.st_mtime);
+    BUILDER_LOG_ARGS(BUILDER_INFO, "Opened %s", (char*)path.str);
+    result.info.mod_time = buf.st_mtime;
 #endif
     return (result);
 }
@@ -103,7 +110,8 @@ bs_needs_rebuild(String8 output_path, String8 input_path) {
     struct FM_File ft_input = bs_get_file_from_path(input_path);
     struct FM_File ft_output = bs_get_file_from_path(output_path);
     // Error with the files or non existing
-    // Needs to rebuild
+    // Needs to rebuild//
+    BUILDER_LOG_ARGS(BUILDER_INFO, "%s: %lld\n" BUILDER_INFO "%s: %lld", input_path.str, ft_input.info.mod_time, output_path.str, ft_output.info.mod_time);
     if (ft_input.info.mod_time == 0 || ft_output.info.mod_time == 0) {result = true;}
     // Source is newer than .exe
     if (bs_compare_file_time(&ft_input, &ft_output) == 1) {result = true;}
@@ -121,9 +129,9 @@ bs_cmd_append(struct BuildCmd *cmd, String8 str) {
 function void 
 bs_reset_files() {
 #ifdef _WIN32
-	if(!MoveFileExA("build.old", "build_all.exe", 0x1)) {
-		BUILDER_LOG_ARGS(BUILDER_ERROR, "Could not reset files: %lu", GetLastError());
-	}
+    if(!MoveFileExA("build.old", "build_all.exe", 0x1)) {
+        BUILDER_LOG_ARGS(BUILDER_ERROR, "Could not reset files: %lu", GetLastError());
+    }
 #else
     
 #endif
@@ -156,7 +164,7 @@ function void
 bs_cmd_run(struct BuildCmd *cmd) {
     // TODO Run the commands in the buildCmd line
     if (cmd->count == 0) {
-        BUILDER_LOG(BUILDER_INFO, "There is no command to run");
+        BUILDER_LOG(BUILDER_ERROR, "There is no command to run");
         return;
     }
 }

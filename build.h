@@ -17,7 +17,9 @@
 #  include "win32.h"
 #  include "src/win32.c"
 #else
+#  undef function
 #  include "linux.h"
+#  define function static
 #endif
 
 

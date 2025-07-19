@@ -4,6 +4,10 @@
 #ifndef BASE_H
 #define BASE_H
 
+#define function static
+#define local_persist static
+#define internal static
+
 typedef unsigned char u8;
 typedef signed   char i8;
 typedef unsigned short u16;
@@ -23,12 +27,12 @@ typedef i64 b64;
 #define true !false 
 
 // Sized Strings
-typedef struct String_Const_u8 {
+typedef struct StringConstU8 {
     u8 *str;
     u64 size;
 } String8;
 
-struct String_Const_Char {
+struct StringConstChar {
     char* str;
     u64 size;
 };  
