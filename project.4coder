@@ -1,49 +1,56 @@
-version(2);
-project_name = "gtms";
-patterns = {
+version(1);
+
+project_name = "New Project";
+
+patterns =
+{
     "*.c",
     "*.h",
     "*.bat",
     "*.sh",
     "*.4coder",
 };
-blacklist_patterns = {
-    "build.c",
-    "build.h",
-};
-load_paths_base = {
-    { "src/", .relative = true, .recursive = true, },
-};
-load_paths = {
-    .win = load_paths_base,
-    .linux = load_paths_base,
-    .mac = load_paths_base,
+
+blacklist_patterns =
+{
+    ".*",
 };
 
-commands = {
-    .build = { .out = "*compilation*", .footer_panel = true, .save_dirty_files = true,
-        .win = "build.bat",
-        .linux = "./build.sh",
-        .mac = "./build.sh", },
-    .run = { 
-        .out = "*run*", .footer_panel = true, .save_dirty_files = false,
-        .win = "build\\gtms.exe",
-        .linux = "./build/gtms",
-        .mac = "build/gtms.exe", 
-    },
-    .build_builder = {
-        .out = "*building builder*", .footer_panel = true, .save_dirty_files = true,
-        .win = "clang -g -gcodeview -Isrc/include build.c -o build_all.exe",
-        .linux = "clang -g -Isrc/include build.c -o build_all",
-    },
-    .run_builder = {
-        .out = "*runing builder*", .footer_panel = true, .save_dirty_files = true,
-        .win = ".\build_all.exe",
-        .linux = "./build_all ./build.c",
-    },
+load_paths =
+{
+    {{ {"."}, .recursive = true, .relative = true }, .os = "win"},
+    {{ {"."}, .recursive = true, .relative = true }, .os = "linux"},
 };
-fkey_command = {
-    .F1 = "build",
-    .F2 = "run",
-    .F5 = "build_builder",
+
+command_list =
+{
+    {
+        .name = "build",
+        .out = "*compilation*",
+        .footer_panel = true,
+        .save_dirty_files = true,
+        .cursor_at_end = false,
+        .cmd =
+        {
+            { "build.bat", .os = "win" },
+            { "./build.sh", .os = "linux" },
+        },
+    },
+    
+    {
+        .name = "run",
+        .out = "*run*",
+        .footer_panel = true,
+        .save_dirty_files = true,
+        .cursor_at_end = false,
+        .cmd =
+        {
+            { "pushd build && main.exe", .os = "win" },
+            { "cd build && ./main", .os = "linux" },
+        },
+    },
+    
 };
+
+fkey_command[1] = "build";
+fkey_command[2] = "run";
