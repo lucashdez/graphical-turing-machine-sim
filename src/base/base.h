@@ -14,20 +14,19 @@
 #  define ColorReset  "\x1b[0m"
 
 typedef unsigned char u8;
-typedef signed   char i8;
+typedef signed   char s8;
 typedef unsigned short u16;
-typedef signed   short i16;
+typedef signed   short s16;
 typedef unsigned int u32;
-typedef signed   int i32;
+typedef signed   int s32;
 typedef unsigned long long u64;
-typedef signed   long long i64;
+typedef signed   long long s64;
 typedef float  f32;
 typedef double f64;
 
 // Booleans
-typedef i8 b8;
-typedef i32 b32; 
-typedef i64 b64;
+typedef s32 b32; 
+
 #define false 0
 #define true !false 
 
@@ -57,6 +56,7 @@ struct StringConstChar {
 
 
 #define string_u8_litexpr(S) (String8) {(u8*)S, sizeof(S)/sizeof(u8) - 1}
+#define s8Lit(S) string_u8_litexpr(S)
 
 // Math
 #define Min(a, b) a<b?a:b

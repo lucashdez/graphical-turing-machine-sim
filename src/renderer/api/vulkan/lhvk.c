@@ -83,15 +83,14 @@ _lhvk_populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT* pCrea
 
 
 
-internal Lhvk_VulkanState 
-lhvk_initVulkan(PlatformWindow* window)
+internal void 
+lhvk_init_vulkan(Lhvk_VulkanState* state)
 {
-    Lhvk_VulkanState state = {0}; 
-    state.arena = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, KB(128));
-    return (state);
+    // TODO(lucashdez): Delete this arena maybe??
+    state->arena = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, KB(128));
 }
 internal void 
-lhvk_createInstance(Lhvk_VulkanState* state)
+lhvk_create_instance(Lhvk_VulkanState* state)
 {
     // TODO(lucashdez): solve this
     const u32 validationLayersCount = 1;

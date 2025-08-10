@@ -9,10 +9,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include <string.h>
 
 
+#define ERR(S, ...) printf(ColorError "[ERROR] " S ColorReset "\n", __VA_ARGS__)
+#define WARN(S, ...) printf(ColorWarn "[WARN] " S ColorReset "\n", __VA_ARGS__)
+#define DEBUG(S, ...) printf(ColorDebug "[DEBUG] " S ColorReset "\n", __VA_ARGS__)
+#define INFO(S, ...) printf(ColorInfo "[INFO] " S ColorReset "\n", __VA_ARGS__)
+
+
 typedef struct VulkanState {
+    Arena arena;
     
     int screenWidth;
     int screenHeight;
@@ -47,9 +55,10 @@ typedef struct VulkanState {
     VkCommandPool commandPool;
     VkCommandBuffer commandBuffer;
     
-    VkSemaphore imageAvailableSemaphore;
-    VkSemaphore renderFinishedSemaphore;
-    VkFence inFlightFence;
+    VkSemaphore *imageAvailableSemaphores;
+    VkSemaphore *renderFinishedSemaphores;
+    VkFence *inFlightFences;
+    u16 current_frame;
     
 } VulkanState;
 
@@ -58,7 +67,11 @@ const char* validationLayers[] = {
     "VK_LAYER_KHRONOS_validation"
 };
 
+#ifdef _WIN32
 const uint32_t requiredExtensionCount = 2;
+#else
+const uint32_t requiredExtensionCount = 1;
+#endif
 const char* requiredExtensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #ifdef _WIN32
@@ -244,7 +257,7 @@ bool findQueueFamilies(VulkanState* pState) {
     
     if ( queueFamilyCount == 0 )
     {
-        printf( "%s - Failed to get queue properties.\n", __FUNCTION__ );
+        printf(ColorError "%s - Failed to get queue properties.\n" ColorReset, __FUNCTION__ );
     }
     
     // Taking a cue from SteamVR Vulkan example and just assuming queue that supports both graphics and present is the only one we want. Don't entirely know if that's right.
@@ -255,6 +268,7 @@ bool findQueueFamilies(VulkanState* pState) {
         vkGetPhysicalDeviceSurfaceSupportKHR(pState->physicalDevice, i, pState->surface, &presentSupport);
         
         if (graphicsSupport && presentSupport) {
+            printf(ColorDebug "[DEBUG] Found family support at idx: %d\n" ColorReset, i);
             pState->graphicsQueueFamilyIndex = i;
             return true;
         }
@@ -281,26 +295,32 @@ void pickPhysicalDevice(VulkanState* pState) {
 }
 
 bool createLogicalDevice(VulkanState* pState) {
+    printf("Trying to find queue families\n");
     if (!findQueueFamilies(pState)){
+        printf(ColorError "[ERROR] %s could not find the queue families" ColorReset, __FUNCTION__);
         return false;
     }
     
-    const uint32_t queueFamilyCount = 1;
+    const u32 queueFamilyCount = 1;
     VkDeviceQueueCreateInfo queueCreateInfos[queueFamilyCount];
-    uint32_t uniqueQueueFamilies[] = {pState->graphicsQueueFamilyIndex };
+    u32 uniqueQueueFamilies[] = {pState->graphicsQueueFamilyIndex };
     
     float queuePriority = 1.0f;
     for (int i = 0; i < queueFamilyCount; ++i) {
         VkDeviceQueueCreateInfo queueCreateInfo = {
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .queueFamilyIndex = uniqueQueueFamilies[i],
+            .queueFamilyIndex = pState->graphicsQueueFamilyIndex,
             .queueCount = 1,
-            .pQueuePriorities = &queuePriority
+            .pQueuePriorities = &queuePriority,
+            .pNext = 0,
+            .flags = 0,
         };
         queueCreateInfos[i] = queueCreateInfo;
     }
     
     VkPhysicalDeviceFeatures deviceFeatures = {};
+    vkGetPhysicalDeviceFeatures(pState->physicalDevice, &deviceFeatures);
+    
     
     VkDeviceCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -486,7 +506,7 @@ void createSwapChain(VulkanState* pState) {
 
 void createImageViews(VulkanState* pState) {
     pState->pSwapChainImageViews =  malloc(sizeof(VkImageView) * pState->swapChainImageCount);
-    
+    INFO("%s Found %d images", __FUNCTION__, pState->swapChainImageCount);
     for (size_t i = 0; i < pState->swapChainImageCount; i++) {
         VkImageViewCreateInfo createInfo = {
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -766,6 +786,9 @@ void createCommandBuffer(VulkanState* pState) {
 }
 
 void createSyncObjects(VulkanState* pState) {
+    // TODO(lucashdez): You knooow
+    pState->current_frame = 0;
+    ////
     VkSemaphoreCreateInfo semaphoreInfo = {
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
     };
@@ -775,14 +798,24 @@ void createSyncObjects(VulkanState* pState) {
         .flags = VK_FENCE_CREATE_SIGNALED_BIT,
     };
     
-    if (vkCreateSemaphore(pState->device, &semaphoreInfo, NULL, &pState->imageAvailableSemaphore) != VK_SUCCESS ||
-        vkCreateSemaphore(pState->device, &semaphoreInfo, NULL, &pState->renderFinishedSemaphore) != VK_SUCCESS ||
-        vkCreateFence(pState->device, &fenceInfo, NULL, &pState->inFlightFence) != VK_SUCCESS) {
-        printf("%s - failed to create synchronization objects for a frame!\n", __FUNCTION__);
+    // TODO(lucashdez): you know, this is bad
+    pState->arena = mm_scratch_arena();
+    pState->imageAvailableSemaphores = MMPushArrayZeros(&pState->arena, VkSemaphore, pState->swapChainImageCount);
+    pState->renderFinishedSemaphores = MMPushArrayZeros(&pState->arena, VkSemaphore, pState->swapChainImageCount);
+    pState->inFlightFences = MMPushArrayZeros(&pState->arena, VkFence, pState->swapChainImageCount);
+    
+    for (s16 i = 0; i < pState->swapChainImageCount; ++i) {
+        if (vkCreateSemaphore(pState->device, &semaphoreInfo, NULL, &pState->imageAvailableSemaphores[i]) != VK_SUCCESS
+            || vkCreateSemaphore(pState->device, &semaphoreInfo, NULL, &pState->renderFinishedSemaphores[i]) != VK_SUCCESS
+            || vkCreateFence(pState->device, &fenceInfo, NULL, &pState->inFlightFences[i]) != VK_SUCCESS)
+        {
+            ERR("Failed to create sync object %d", i);
+        }
+        
     }
 }
 
-void recordCommandBuffer(VulkanState* pState, uint32_t imageIndex) {
+void recordCommandBuffer(VulkanState* pState, s32 imageIndex) {
     VkCommandBufferBeginInfo beginInfo = {
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
     };
@@ -832,16 +865,49 @@ void recordCommandBuffer(VulkanState* pState, uint32_t imageIndex) {
     }
 }
 
+void 
+cleanup_swapchain(VulkanState *state)
+{
+    for (int i = 0; i < state->swapChainImageCount; ++i) 
+    {
+        vkDestroyFramebuffer(state->device, state->pSwapChainFramebuffers[i], NULL);
+    }
+    
+    for (int i = 0; i < state->swapChainImageCount; ++i) 
+    {
+        vkDestroyImageView(state->device, state->pSwapChainImageViews[i], NULL);
+    }
+    vkDestroySwapchainKHR(state->device, state->swapChain, NULL);
+}
 
-
+void 
+recreateSwapchain(VulkanState *state) 
+{
+    cleanup_swapchain(state);
+    createSwapChain(state);
+    createImageViews(state);
+    createFramebuffers(state);
+}
 
 void drawFrame(VulkanState* pState) {
-    while(vkWaitForFences(pState->device, 1, &pState->inFlightFence, VK_TRUE, UINT64_MAX) != VK_SUCCESS);
+    vkWaitForFences(pState->device, 1, &pState->inFlightFences[pState->current_frame], VK_TRUE, UINT64_MAX);
     
-    vkResetFences(pState->device, 1, &pState->inFlightFence);
+    s32 imageIndex; 
     
-    uint32_t imageIndex;
-    vkAcquireNextImageKHR(pState->device, pState->swapChain, UINT64_MAX, pState->imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(pState->device, pState->swapChain, UINT64_MAX, pState->imageAvailableSemaphores[pState->current_frame], VK_NULL_HANDLE, &imageIndex);
+    
+    if (result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        vkDeviceWaitIdle(pState->device);
+        recreateSwapchain(pState);
+        return;
+    }
+    else if (result != VK_SUCCESS)
+    {
+        ERR("Failed to acquire KHR image %d", result);
+    }
+    
+    vkResetFences(pState->device, 1, &pState->inFlightFences[pState->current_frame]);
     
     vkResetCommandBuffer(pState->commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
     recordCommandBuffer(pState, imageIndex);
@@ -850,7 +916,7 @@ void drawFrame(VulkanState* pState) {
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO
     };
     
-    VkSemaphore waitSemaphores[] = {pState->imageAvailableSemaphore};
+    VkSemaphore waitSemaphores[] = {pState->imageAvailableSemaphores[pState->current_frame]};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
@@ -859,11 +925,11 @@ void drawFrame(VulkanState* pState) {
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &pState->commandBuffer;
     
-    VkSemaphore signalSemaphores[] = {pState->renderFinishedSemaphore};
+    VkSemaphore signalSemaphores[] = {pState->renderFinishedSemaphores[pState->current_frame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
     
-    if (vkQueueSubmit(pState->queue, 1, &submitInfo, pState->inFlightFence) != VK_SUCCESS) {
+    if (vkQueueSubmit(pState->queue, 1, &submitInfo, pState->inFlightFences[pState->current_frame]) != VK_SUCCESS) {
         printf("%s - failed to submit draw command buffer!\n", __FUNCTION__);
     }
     
@@ -879,18 +945,34 @@ void drawFrame(VulkanState* pState) {
     presentInfo.pSwapchains = swapChains;
     
     presentInfo.pImageIndices = &imageIndex;
+    vkWaitForFences(pState->device, 1, &pState->inFlightFences[pState->current_frame], VK_TRUE, UINT64_MAX);
     
     vkQueuePresentKHR(pState->queue, &presentInfo);
+    
+    pState->current_frame = (pState->current_frame + 1) % 4;
 }
 
-void initVulkan(VulkanState* pState) {
+void initVulkan(Arena* arena, VulkanState* pState) {
     printf( "%s - initializing vulkan!\n", __FUNCTION__ );
-    Lhvk_VulkanState state = lhvk_initVulkan(pState->pWindow);
-    lhvk_createInstance(&state);
-    createInstance(pState);
+    PlatformWindow window =  {
+        .width = 800, 
+        .height = 600, 
+        .pwindow = pState->pWindow,
+    };
+    
+    Lhvk_VulkanState *state = MMPushArrayZeros(arena, Lhvk_VulkanState, 1);
+    lhvk_initVulkan(state);
+    printf("Initing the instance\n");
+    lhvk_create_instance(state);
+    pState->instance = state->instance;
+    
+    printf("Setting up debug messenger\n");
     setupDebugMessenger(pState);
+    printf("Creating surface\n");
     createSurface(pState);
+    printf("Pick Physical\n");
     pickPhysicalDevice(pState);
+    printf("Create logical\n");
     createLogicalDevice(pState);
     createSwapChain(pState);
     createImageViews(pState);
@@ -913,28 +995,26 @@ void mainLoop(VulkanState* pState) {
     vkDeviceWaitIdle(pState->device);
 }
 
+
+
 void cleanup(VulkanState* pState) {
     printf("%s - cleaning up app!\n", __FUNCTION__);
+    for (s16 i = 0; i < pState->swapChainImageCount; ++i)
+    {
+        vkDestroySemaphore(pState->device, pState->renderFinishedSemaphores[i], NULL);
+        vkDestroySemaphore(pState->device, pState->imageAvailableSemaphores[i], NULL);
+        vkDestroyFence(pState->device, pState->inFlightFences[i], NULL);
+    }
     
-    vkDestroySemaphore(pState->device, pState->renderFinishedSemaphore, NULL);
-    vkDestroySemaphore(pState->device, pState->imageAvailableSemaphore, NULL);
-    vkDestroyFence(pState->device, pState->inFlightFence, NULL);
+    cleanup_swapchain(pState);
     
     vkDestroyCommandPool(pState->device, pState->commandPool, NULL);
-    
-    for (int i = 0; i < pState->swapChainImageCount; ++i) {
-        vkDestroyFramebuffer(pState->device, pState->pSwapChainFramebuffers[i], NULL);
-    }
     
     vkDestroyPipeline(pState->device, pState->graphicsPipeline, NULL);
     vkDestroyPipelineLayout(pState->device, pState->pipelineLayout, NULL);
     vkDestroyRenderPass(pState->device, pState->renderPass, NULL);
     
-    for (int i = 0; i < pState->swapChainImageCount; ++i) {
-        vkDestroyImageView(pState->device, pState->pSwapChainImageViews[i], NULL);
-    }
     
-    vkDestroySwapchainKHR(pState->device, pState->swapChain, NULL);
     vkDestroyDevice(pState->device, NULL);
     
     if (pState->enableValidationLayers) {
@@ -970,12 +1050,13 @@ int main(int argc, char *argv[])
     pState->screenHeight = window.height;
     pState->enableValidationLayers = true;
     
+    Arena vk_arena = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, KB(256));
     
     
     initWindow(pState);
     // NOTE(lucashdez): Temporary
     window.pwindow = pState->pWindow;
-    initVulkan(pState);
+    initVulkan(&vk_arena, pState);
     
     mainLoop(pState);
     cleanup(pState);

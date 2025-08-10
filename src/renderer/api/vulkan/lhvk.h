@@ -3,6 +3,8 @@
 #define LHVK_H
 
 #include <stdio.h>
+// This include is because of strcmp
+#include <string.h>
 
 /* 
 *  ############
@@ -26,8 +28,7 @@ typedef struct Lhvk_VulkanState
  *      API
   *  ############
 */
-internal Lhvk_VulkanState lhvk_initVulkan(PlatformWindow*);
-internal void lhvk_createInstance(Lhvk_VulkanState*);
-
+internal void lhvk_init_vulkan(Lhvk_VulkanState*);
+internal void lhvk_create_instance(Lhvk_VulkanState*);
 
 #endif //LHVK_H

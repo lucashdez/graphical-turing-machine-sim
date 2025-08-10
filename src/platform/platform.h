@@ -16,8 +16,8 @@
 */
 
 typedef struct PlatformWindow {
-    i32 width;
-    i32 height;
+    s32 width;
+    s32 height;
     GLFWwindow *pwindow;
 } PlatformWindow;
 
