@@ -1,10 +1,9 @@
 #include "base/base.h"
-#include "base/memory.h"
 #include "platform/platform.h"
 #include "renderer/api/vulkan/lhvk.h"
 
 
-#include "base/memory.c"
+#include "base/base.c"
 #include "renderer/api/vulkan/lhvk.c"
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,10 +12,6 @@
 #include <string.h>
 
 
-#define ERR(S, ...) printf(ColorError "[ERROR] " S ColorReset "\n", __VA_ARGS__)
-#define WARN(S, ...) printf(ColorWarn "[WARN] " S ColorReset "\n", __VA_ARGS__)
-#define DEBUG(S, ...) printf(ColorDebug "[DEBUG] " S ColorReset "\n", __VA_ARGS__)
-#define INFO(S, ...) printf(ColorInfo "[INFO] " S ColorReset "\n", __VA_ARGS__)
 
 
 typedef struct VulkanState {
@@ -961,7 +956,7 @@ void initVulkan(Arena* arena, VulkanState* pState) {
     };
     
     Lhvk_VulkanState *state = MMPushArrayZeros(arena, Lhvk_VulkanState, 1);
-    lhvk_initVulkan(state);
+    lhvk_init_vulkan(state);
     printf("Initing the instance\n");
     lhvk_create_instance(state);
     pState->instance = state->instance;

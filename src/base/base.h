@@ -2,6 +2,8 @@
 #ifndef BASE_H
 #define BASE_H
 
+//~
+//base-types
 
 #define local_persist static
 #define global_var static
@@ -44,6 +46,11 @@ struct StringConstChar {
 
 ///////////////////////////////////
 // HELPER MACROS
+#define ERR(S, ...) printf(ColorError "[ERROR] " S ColorReset "\n", __VA_ARGS__)
+#define WARN(S, ...) printf(ColorWarn "[WARN] " S ColorReset "\n", __VA_ARGS__)
+#define DEBUG(S, ...) printf(ColorDebug "[DEBUG] " S ColorReset "\n", __VA_ARGS__)
+#define INFO(S, ...) printf(ColorInfo "[INFO] " S ColorReset "\n", __VA_ARGS__)
+
 #define Statement(S) do {S}while(0)
 
 // Strings
@@ -101,5 +108,52 @@ struct StringConstChar {
 // Simple Linked-List Stack
 #define sll_stack_push(h, n) n->next = h, h=n
 #define sll_stack_pop(h) h = h->next 
+
+
+
+//~
+//MEMORY
+typedef void* MM_ReserveFunc(void* ctx, u64 size);
+typedef void MM_ChangeMemoryFunc(void* ctx, void* ptr, u64 size);
+
+typedef struct MM_BaseMemory {
+    MM_ReserveFunc *reserve;
+    MM_ChangeMemoryFunc *commit;
+    MM_ChangeMemoryFunc *decommit;
+    MM_ChangeMemoryFunc *release;
+    void *ctx;
+} MM_BaseMemory;
+
+typedef struct Arena {
+    struct MM_BaseMemory* base;
+    u8* memory; //pointer to the initial
+    u64 cap;
+    u64 pos;
+    u64 commit_pos;
+} Arena;
+
+// UTILITIES
+internal void* mm_memset(void* dest, register int val, register u64 len);
+internal void* mm_memcpy(void* dest, void* src, u64 len);
+internal void* mm_memcpymv(void* dest, void* src, u64 len);
+
+internal struct MM_BaseMemory* mm_create_malloc_base_memory(void);
+internal void mm_change_memory_noop(void* ctx, void* ptr, u64 size) {}
+internal Arena mm_make_arena_reserve(MM_BaseMemory *base, u64 reserve_size);
+internal Arena mm_make_arena(MM_BaseMemory *base);
+internal Arena mm_scratch_arena();
+
+
+internal void mm_arena_release(Arena *arena);
+internal void* mm_arena_push(Arena *arena, u64 size);
+internal void* mm_arena_push_zeros(Arena *arena, u64 size);
+internal void mm_arena_pop_to(Arena *arena, u64 pos);
+
+
+// GLOBALS
+global_var MM_BaseMemory* GLOBAL_BASE_ALLOCATOR = {0};
+
+
+
 
 #endif //BASE_H
