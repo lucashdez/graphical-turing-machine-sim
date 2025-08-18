@@ -260,7 +260,7 @@ bool findQueueFamilies(VulkanState* pState) {
         vkGetPhysicalDeviceSurfaceSupportKHR(pState->physicalDevice, i, pState->surface, &presentSupport);
         
         if (graphicsSupport && presentSupport) {
-            printf(ColorDebug "[DEBUG] Found family support at idx: %d\n" ColorReset, i);
+            DEBUG("Found family support at idx: %d", i);
             pState->graphicsQueueFamilyIndex = i;
             return true;
         }
