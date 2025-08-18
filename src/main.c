@@ -11,9 +11,6 @@
 
 #include <string.h>
 
-
-
-
 typedef struct VulkanState {
     Arena arena;
     
@@ -196,7 +193,7 @@ void createInstance(VulkanState* pState) {
         .pApplicationInfo = &appInfo,
     };
     
-    uint32_t extensionCount = 0;
+    u32 extensionCount = 0;
     getRequiredExtensions(pState, &extensionCount, NULL);
     
     const char* extensions[extensionCount];

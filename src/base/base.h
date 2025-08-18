@@ -46,10 +46,12 @@ struct StringConstChar {
 
 ///////////////////////////////////
 // HELPER MACROS
-#define ERR(S, ...) printf(ColorError "[ERROR] " S ColorReset "\n", __VA_ARGS__)
-#define WARN(S, ...) printf(ColorWarn "[WARN] " S ColorReset "\n", __VA_ARGS__)
-#define DEBUG(S, ...) printf(ColorDebug "[DEBUG] " S ColorReset "\n", __VA_ARGS__)
-#define INFO(S, ...) printf(ColorInfo "[INFO] " S ColorReset "\n", __VA_ARGS__)
+
+#define ERR(S, ...) printf(ColorError   "[ERROR] %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
+#define WARN(S, ...) printf(ColorWarn   "[WARN]  %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
+#define DEBUG(S, ...) printf(ColorDebug "[DEBUG] %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
+#define INFO(S, ...) printf(ColorInfo   "[INFO]  %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
+
 
 #define Statement(S) do {S}while(0)
 
