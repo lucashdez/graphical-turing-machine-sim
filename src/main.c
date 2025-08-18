@@ -13,10 +13,10 @@
 #include <string.h>
 
 
-#define ERR(S, ...) printf(ColorError "[ERROR] " S ColorReset "\n", __VA_ARGS__)
-#define WARN(S, ...) printf(ColorWarn "[WARN] " S ColorReset "\n", __VA_ARGS__)
-#define DEBUG(S, ...) printf(ColorDebug "[DEBUG] " S ColorReset "\n", __VA_ARGS__)
-#define INFO(S, ...) printf(ColorInfo "[INFO] " S ColorReset "\n", __VA_ARGS__)
+#define ERR(S, ...) printf(ColorError   "[ERROR] %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
+#define WARN(S, ...) printf(ColorWarn   "[WARN]  %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
+#define DEBUG(S, ...) printf(ColorDebug "[DEBUG] %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
+#define INFO(S, ...) printf(ColorInfo   "[INFO]  %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
 
 
 typedef struct VulkanState {
@@ -201,7 +201,7 @@ void createInstance(VulkanState* pState) {
         .pApplicationInfo = &appInfo,
     };
     
-    uint32_t extensionCount = 0;
+    u32 extensionCount = 0;
     getRequiredExtensions(pState, &extensionCount, NULL);
     
     const char* extensions[extensionCount];
@@ -961,7 +961,7 @@ void initVulkan(Arena* arena, VulkanState* pState) {
     };
     
     Lhvk_VulkanState *state = MMPushArrayZeros(arena, Lhvk_VulkanState, 1);
-    lhvk_initVulkan(state);
+    lhvk_init_vulkan(state);
     printf("Initing the instance\n");
     lhvk_create_instance(state);
     pState->instance = state->instance;
