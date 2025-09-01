@@ -52,6 +52,11 @@ struct StringConstChar {
 #define DEBUG(S, ...) printf(ColorDebug "[DEBUG] %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
 #define INFO(S, ...) printf(ColorInfo   "[INFO]  %s:%d -> " S ColorReset "\n",__FILE__, __LINE__, __VA_ARGS__)
 
+#define ERRMSG(S, ...)   printf(ColorError "[ERROR] %s:%d -> " S ColorReset "\n",__FILE__, __LINE__)
+#define WARNMSG(S, ...)  printf(ColorWarn  "[WARN]  %s:%d -> " S ColorReset "\n",__FILE__, __LINE__)
+#define DEBUGMSG(S, ...) printf(ColorDebug "[DEBUG] %s:%d -> " S ColorReset "\n",__FILE__, __LINE__)
+#define INFOMSG(S, ...)  printf(ColorInfo  "[INFO]  %s:%d -> " S ColorReset "\n",__FILE__, __LINE__)
+
 
 #define Statement(S) do {S}while(0)
 
