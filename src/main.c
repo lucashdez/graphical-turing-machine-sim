@@ -2,7 +2,6 @@
 #include "platform/platform.h"
 #include "renderer/api/vulkan/lhvk.h"
 
-
 #include "base/base.c"
 #include "renderer/api/vulkan/lhvk.c"
 
@@ -102,7 +101,7 @@ global_var const struct wl_buffer_listener buffer_listener = {
 internal struct wl_buffer*
 draw_frame(struct WaylandState *state)
 {
-    const int width = 640, height = 480;
+    const int width = 1920, height = 1080;
     int stride = width * 4;
     int size = stride * height;
     
@@ -121,6 +120,8 @@ draw_frame(struct WaylandState *state)
     struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_XRGB8888);
     wl_shm_pool_destroy(pool);
     close(fd);
+    state->framebuffer;
+    
     
     /* Draw checkerboxed background */
     for (int y = 0; y < height; ++y) {
@@ -239,6 +240,7 @@ int main(int argc, char *argv[])
     {
         // This is blank because yes;
     }
+    
     
     wl_display_disconnect(display);
     INFOMSG("display disconnected");

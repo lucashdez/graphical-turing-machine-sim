@@ -24,22 +24,23 @@ typedef struct PlatformWindow {
 
 typedef enum PlatformEvent {
     PltfNone,
+    ,
     
 } PlatformEvent;
 
 
 
 
-//~ MEMORY
-void* pltf_mem_reserve();
-void* pltf_mem_commit();
-void pltf_mem_decommit(void* ptr, u64 size);
-void pltf_mem_release(void*);
+//~ API
+internal void* pltf_mem_reserve();
+internal void* pltf_mem_commit();
+internal void pltf_mem_decommit(void* ptr, u64 size);
+internal void pltf_mem_release(void*);
+internal void pltf_print(const char* s);
 
-
-//~ DEBUGGING
-void pltf_print(const char* s);
-
+internal PlatformWindow* pltf_window_create(Arena *arena, s32 width, s32 height, StringU8 title);
+internal void pltf_window_destroy(PlatformWindow* window);
+internal void pltf_window_present_frame(PlatformWindow* win, void* pixels, u32 pitch);
 
 
 
