@@ -120,7 +120,7 @@ draw_frame(struct WaylandState *state)
     struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_XRGB8888);
     wl_shm_pool_destroy(pool);
     close(fd);
-    state->framebuffer;
+    
     
     
     /* Draw checkerboxed background */

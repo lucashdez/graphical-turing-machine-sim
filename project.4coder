@@ -18,8 +18,8 @@ blacklist_patterns =
 
 load_paths =
 {
-    {{ {"."}, .recursive = true, .relative = true }, .os = "win"},
-    {{ {"."}, .recursive = true, .relative = true }, .os = "linux"},
+    {{ {"./src"}, .recursive = true, .relative = true }, .os = "win"},
+    {{ {"./src"}, .recursive = true, .relative = true }, .os = "linux"},
 };
 
 command_list =

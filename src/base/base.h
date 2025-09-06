@@ -33,15 +33,15 @@ typedef s32 b32;
 #define true !false 
 
 // Sized Strings
-struct StringConstU8 {
+typedef struct StringConstU8 {
     const u8 *str;
     u64 size;
 } StringU8;
 
-struct StringConstChar {
+typedef struct StringConstChar {
     const char* str;
     u64 size;
-};  
+} StringChar;  
 
 
 ///////////////////////////////////

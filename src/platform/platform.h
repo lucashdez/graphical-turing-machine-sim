@@ -8,6 +8,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
+#include "../base/base.h"
+
 
 
 
@@ -24,7 +26,7 @@ typedef struct PlatformWindow {
 
 typedef enum PlatformEvent {
     PltfNone,
-    ,
+    
     
 } PlatformEvent;
 
@@ -38,7 +40,7 @@ internal void pltf_mem_decommit(void* ptr, u64 size);
 internal void pltf_mem_release(void*);
 internal void pltf_print(const char* s);
 
-internal PlatformWindow* pltf_window_create(Arena *arena, s32 width, s32 height, StringU8 title);
+internal PlatformWindow* pltf_window_create(Arena *arena, s32 width, s32 height, struct StringConstU8 title);
 internal void pltf_window_destroy(PlatformWindow* window);
 internal void pltf_window_present_frame(PlatformWindow* win, void* pixels, u32 pitch);
 
