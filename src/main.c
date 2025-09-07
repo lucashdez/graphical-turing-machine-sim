@@ -27,6 +27,9 @@
 #include <time.h>
 #include <unistd.h>
 
+
+global_var b32 running = 1;
+
 internal void 
 randname(char* buf)
 {
@@ -85,6 +88,10 @@ typedef struct WaylandState {
     struct wl_surface *surface;
     struct xdg_surface *x_surface;
     struct xdg_toplevel *x_toplevel;
+    
+    u32 *framebuffer;
+    
+    b32 running;
 } WaylandState;
 
 internal void 
@@ -122,16 +129,20 @@ draw_frame(struct WaylandState *state)
     close(fd);
     
     
+    mm_memcpy(data, state->framebuffer, size);
+    
     
     /* Draw checkerboxed background */
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            if ((x + y / 8 * 8) % 16 < 8)
-                data[y * width + x] = 0xFF666666;
-            else
-                data[y * width + x] = 0xFFEEEEEE;
+    /* 
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                if ((x + y / 8 * 8) % 16 < 8)
+                    data[y * width + x] = 0xFF666666;
+                else
+                    data[y * width + x] = 0xFFEEEEEE;
+            }
         }
-    }
+     */
     munmap(data, size);
     wl_buffer_add_listener(buffer, &buffer_listener, 0);
     return buffer;
@@ -203,6 +214,27 @@ registry_listener = {
 	.global_remove = registry_handle_global_remove,
 };
 
+internal void
+toplevel_handle_close_action(void *data, struct xdg_toplevel *toplevel)
+{
+    running = false;
+}
+
+internal void
+toplevel_handle_configure(void *data
+                          , struct xdg_toplevel *toplevel
+                          , s32 width, s32 height
+                          , struct wl_array *states) 
+{
+    
+}
+
+
+global_var const struct xdg_toplevel_listener toplevel_listener = {
+    .configure = toplevel_handle_configure,
+    .close = toplevel_handle_close_action,
+};
+
 
 //~ MAIN
 int main(int argc, char *argv[])
@@ -218,12 +250,14 @@ int main(int argc, char *argv[])
     window.width = 800;
     window.height = 600;
     
-    Arena renderer_arena = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, KB(256));
+    Arena renderer_arena = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, MB(256));
+    
     
     struct wl_display *display = wl_display_connect(0);
     s32 wl_fd = wl_display_get_fd(display);
     INFOMSG("display connected with fd: %d", wl_fd);
     WaylandState state = {0};
+    state.framebuffer = MMPushArrayZeros(&renderer_arena, u32, 1920*1080);
     struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, &state);
     wl_display_roundtrip(display);
@@ -233,11 +267,30 @@ int main(int argc, char *argv[])
     xdg_surface_add_listener(state.x_surface, &x_surface_listener, &state);
     state.x_toplevel = xdg_surface_get_toplevel(state.x_surface);
     xdg_toplevel_set_title(state.x_toplevel, "example");
+    xdg_toplevel_add_listener(state.x_toplevel, &toplevel_listener, &state);
     wl_surface_commit(state.surface);
     
+    u32 color = 0xFF000000;
     
-    while(wl_display_dispatch(display) != -1) 
+    while(running == 1) 
     {
+        wl_display_dispatch(display);
+        
+        
+        
+        for(int i = 0; i < (1920 * 1080); ++i)
+        {
+            state.framebuffer[i] = color;
+        }
+        
+        
+        struct wl_buffer *buffer = draw_frame(&state);
+        wl_surface_attach(state.surface, buffer, 0, 0);
+        
+        color = color + 0x00000055;
+        
+        wl_surface_damage(state.surface, 0, 0, 1920, 1080);
+        wl_surface_commit(state.surface);
         // This is blank because yes;
     }
     
