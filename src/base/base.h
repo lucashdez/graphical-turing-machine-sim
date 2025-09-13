@@ -140,7 +140,7 @@ typedef struct Arena {
 } Arena;
 
 // UTILITIES
-internal void* mm_memset(void* dest, register int val, register u64 len);
+internal void* mm_memset(void* dest, int val, u64 len);
 internal void* mm_memcpy(void* dest, void* src, u64 len);
 internal void* mm_memcpymv(void* dest, void* src, u64 len);
 
