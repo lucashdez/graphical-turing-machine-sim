@@ -303,7 +303,6 @@ global_var const struct wl_callback_listener wl_surface_frame_listener = {
     .done = wl_frame_done,
 };
 
-
 global_var const struct xdg_toplevel_listener toplevel_listener = {
     .configure = toplevel_handle_configure,
     .close = toplevel_handle_close_action,
@@ -312,14 +311,11 @@ global_var const struct xdg_toplevel_listener toplevel_listener = {
 void app_step(PlatformFrame *frame, void *user_ptr) {
     WaylandState *state = user_ptr; 
     ShmBuffer *B = &state->buffers[state->cur];
-    for(int i = 0; i < B->size; ++i)
+    for(int i = 0; i < B->size/4; ++i)
     {
         state->framebuffer[i] = color;
     }
-    color += 0x00000011;
-
-    mm_memcpy(B->data, state->framebuffer, B->size);
-
+    color += 0x00020202;
 }
 
 internal
@@ -351,6 +347,7 @@ internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time)
     if (w->frame_cb)
     {
         w->frame_cb(&(PlatformFrame){.dt = time, .width = 1920, .height = 1080}, data);
+        mm_memcpy(buf->data, w->framebuffer, buf->size);
     }
 
     buf->busy = 1;

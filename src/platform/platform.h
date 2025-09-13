@@ -46,10 +46,14 @@ internal void pltf_print(const char* s);
 
 internal PlatformWindow* pltf_window_create(Arena *arena, s32 width, s32 height, struct StringConstU8 title);
 internal void pltf_window_destroy(PlatformWindow* win);
+
 internal void pltf_window_present_frame(PlatformWindow* win, void* pixels, u32 pitch);
 internal void pltf_poll_events(PlatformWindow* win);
 internal u64 pltf_timestamp(void);
 typedef void (*PlatformFrameCallback)(PlatformFrame *frame, void *user_pointer);
+
+/** main loop */ 
 internal void pltf_window_set_frame_callback(PlatformWindow *wnd, PlatformFrameCallback cb, void* user);
+internal void pltf_window_run_loop(PlatformWindow *wnd);
 
 #endif //PLATFORM_H
