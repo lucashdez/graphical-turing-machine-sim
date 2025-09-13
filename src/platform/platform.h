@@ -12,15 +12,19 @@
 
 
 
-
 //~ STRUCTS
 
+typedef struct PlatformFrame {
+    u64 dt;
+    u32 width, height;
+} PlatformFrame;
 
 typedef struct PlatformWindow {
     s32 width;
     s32 height;
     void* os_window; // This is a pointer to a opaque struct
 } PlatformWindow;
+
 
 //~ ENUMS
 
@@ -45,7 +49,7 @@ internal void pltf_window_destroy(PlatformWindow* win);
 internal void pltf_window_present_frame(PlatformWindow* win, void* pixels, u32 pitch);
 internal void pltf_poll_events(PlatformWindow* win);
 internal u64 pltf_timestamp(void);
-
-
+typedef void (*PlatformFrameCallback)(PlatformFrame *frame, void *user_pointer);
+internal void pltf_window_set_frame_callback(PlatformWindow *wnd, PlatformFrameCallback cb, void* user);
 
 #endif //PLATFORM_H

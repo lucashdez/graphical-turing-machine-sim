@@ -80,8 +80,8 @@ allocate_shm_file(size_t size)
 
 
 typedef struct ShmBuffer {
-    struct wl_buffer *wlbuf;
-    void* data;
+    struct wl_buffer *buffer;
+    void *data;
     s32 size;
     s32 stride;
     b32 busy;
@@ -98,16 +98,20 @@ typedef struct WaylandState {
     struct xdg_surface *x_surface;
     struct xdg_toplevel *x_toplevel;
     
+    u32 *framebuffer;
+    PlatformFrameCallback frame_cb;
+    void *frame_user;
+
+
+    // buffer thingy
+    struct wl_buffer *buffer;
+    void* data_buffer;
+
+    ShmBuffer buffers[2];
+    s32 cur;
+    
     b32 running;
     
-    s32 width, height;
-    
-    ShmBuffer buffers[2];
-    s32 current_buffer;
-    
-    u32 last_frame;
-    
-    u32 *framebuffer;
 } WaylandState;
 
 internal void 
@@ -168,7 +172,7 @@ destroy_shm_buffer(ShmBuffer *B)
 }
 
 internal struct wl_buffer*
-draw_frame(struct WaylandState *state)
+create_buffer(struct WaylandState *state)
 {
     const int width = 640, height = 480;
     int stride = width * 4;
@@ -193,35 +197,26 @@ draw_frame(struct WaylandState *state)
     
     mm_memcpy(data, state->framebuffer, size);
     
-    
-    /* Draw checkerboxed background */
-    
-    munmap(data, size);
+    state->data_buffer = data;
+    //munmap(data, size);
     wl_buffer_add_listener(buffer, &buffer_listener, 0);
     return buffer;
 }
 
+
+internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time);
 internal void
 xdg_surface_configure(void *data, struct xdg_surface * xsurface, u32 serial)
 {
-    struct WaylandState *S = data;
+    struct WaylandState *state = data;
     xdg_surface_ack_configure(xsurface, serial);
     
-    if (S->width <= 0 || S->height <= 0)
-    {
-        S->width = 800; S->height = 600;
-    }
-    
-    for (s32 i = 0; i < 2; i++)
-    {
-        destroy_shm_buffer(&S->buffers[i]);
-        create_shm_buffer(S, &S->buffers[i], S->width, S->height);
-    }
-    S->current_buffer = 0;
-    
-    struct wl_callback *cb = wl_surface_frame(S->surface);
-    wl_callback_add_listener(cb, &wl_surface_frame_listener, S);
-    wl_surface_commit(S->surface);
+    struct wl_buffer *buffer = create_buffer(state);
+    struct wl_callback *first = wl_surface_frame(state->surface);
+    static const struct wl_callback_listener listener = {.done = wl_frame_done};
+    wl_callback_add_listener(first, &listener, state);
+    wl_surface_attach(state->surface, buffer, 0, 0);
+    wl_surface_commit(state->surface);
 }
 
 global_var const struct xdg_surface_listener x_surface_listener = {
@@ -354,6 +349,44 @@ global_var const struct xdg_toplevel_listener toplevel_listener = {
     .close = toplevel_handle_close_action,
 };
 
+static u32 color = 0xFF00FF00;
+void app_step(PlatformFrame *frame, void *user_ptr) {
+    WaylandState *state = user_ptr; 
+    INFOMSG("frame");
+    for(int i = 0; i < (1920 * 1080); ++i)
+    {
+        state->framebuffer[i] = color;
+    }
+
+}
+
+internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time) 
+{
+    WaylandState *w = data;
+    wl_callback_destroy(cb);
+    
+    //wl_display_dispatch_pending(w->display);
+
+
+    if (w->frame_cb)
+    {
+        w->frame_cb(&(PlatformFrame){.dt = time, .width = 1920, .height = 1080}, data);
+    }
+
+    mm_memcpy(w->data_buffer, w->framebuffer, 1920*1080);
+    wl_surface_attach(w->surface,w->buffer, 0, 0);
+    wl_surface_damage_buffer(w->surface, 0, 0, 1920, 1080);
+
+
+    struct wl_callback *next_cb = wl_surface_frame(w->surface);
+    static const struct wl_callback_listener listener = {.done = wl_frame_done};
+    wl_callback_add_listener(next_cb, &listener, w);
+
+    wl_surface_commit(w->surface);
+}
+
+
+
 
 
 
@@ -372,14 +405,20 @@ int main(int argc, char *argv[])
     window.height = 600;
     
     Arena renderer_arena = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, MB(256));
+    
+    
+    struct wl_display *display = wl_display_connect(0);
+    s32 wl_fd = wl_display_get_fd(display);
+
+    INFO("display connected with fd: %d", wl_fd);
     WaylandState state = {0};
-    
-    state.display = wl_display_connect(0);
-    s32 wl_fd = wl_display_get_fd(state.display);
-    INFOMSG("display connected with fd: %d", wl_fd);
-    
-    state.framebuffer = MMPushArrayZeros(&renderer_arena, u32,640*480);
-    struct wl_registry *registry = wl_display_get_registry(state.display);
+    state.display = display;
+    state.framebuffer = MMPushArrayZeros(&renderer_arena, u32, 1920*1080);
+    for(int i = 0; i < (1920 * 1080); ++i)
+    {
+        state.framebuffer[i] = color;
+    }
+    struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, &state);
     wl_display_roundtrip(state.display);
     
@@ -390,14 +429,18 @@ int main(int argc, char *argv[])
     xdg_toplevel_set_title(state.x_toplevel, "example");
     xdg_toplevel_add_listener(state.x_toplevel, &toplevel_listener, &state);
     wl_surface_commit(state.surface);
+
+    //SET frame callback
+    state.frame_cb = app_step;
+    state.frame_user = &state;
+    /////
     
     
     struct wl_callback *cb = wl_surface_frame(state.surface);
     wl_callback_add_listener(cb, &wl_surface_frame_listener, &state);
     while(running == 1) 
     {
-        wl_display_dispatch(state.display);
-        // This is blank because yes;
+        wl_display_dispatch(display);
     }
     
     
