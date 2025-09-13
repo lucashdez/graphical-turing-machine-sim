@@ -308,14 +308,39 @@ global_var const struct xdg_toplevel_listener toplevel_listener = {
     .close = toplevel_handle_close_action,
 };
 
+
+
 void app_step(PlatformFrame *frame, void *user_ptr) {
     WaylandState *state = user_ptr; 
     ShmBuffer *B = &state->buffers[state->cur];
-    for(int i = 0; i < B->size/4; ++i)
+    u8* Row = (u8*)state->framebuffer;
+
+    local_persist int XOffset = 0;
+    local_persist int YOffset = 0;
+
+    for (int Y = 0; Y < 1080; ++Y)
     {
-        state->framebuffer[i] = color;
+        u8* pixel = Row;
+        for (int X = 0; X < 1920; ++X) 
+        {
+            *pixel = (u8)(X + XOffset);
+            ++pixel;
+            *pixel = (u8)(Y + YOffset);
+            ++pixel;
+            *pixel = 0;
+            ++pixel;
+            *pixel = 0;
+            ++pixel;
+
+
+        }
+        Row += (1920 * 4);
     }
-    color += 0x00020202;
+
+    INFO("frame %llu",frame->dt);
+
+    XOffset += 1;
+    YOffset += 1;
 }
 
 internal
@@ -391,10 +416,7 @@ int main(int argc, char *argv[])
     WaylandState state = {0};
     state.display = display;
     state.framebuffer = MMPushArrayZeros(&renderer_arena, u32, 1920*1080);
-    for(int i = 0; i < (1920 * 1080); ++i)
-    {
-        state.framebuffer[i] = color;
-    }
+
     struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, &state);
     wl_display_roundtrip(state.display);
