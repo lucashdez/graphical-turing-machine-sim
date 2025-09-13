@@ -113,13 +113,14 @@ typedef struct WaylandState {
     b32 running;
     
 } WaylandState;
-
+internal ShmBuffer* get_free_buffer(WaylandState *state);
 internal void 
 wl_buffer_release(void* data, struct wl_buffer *buffer) 
 {
     // sent by the compositor
     ShmBuffer *b = data;
-    b->busy = 0;
+    if (b)
+        b->busy = 0;
 }
 
 global_var const struct wl_buffer_listener buffer_listener = {
@@ -152,7 +153,7 @@ create_shm_buffer(WaylandState *S, ShmBuffer *B, s32 w, s32 h)
     wl_shm_pool_destroy(pool);
     close(fd);
     
-    B->wlbuf = buffer;
+    B->buffer = buffer;
     B->data = mem;
     B->size = size;
     B->stride = stride;
@@ -165,8 +166,8 @@ create_shm_buffer(WaylandState *S, ShmBuffer *B, s32 w, s32 h)
 internal void
 destroy_shm_buffer(ShmBuffer *B)
 {
-    if (!B->wlbuf) return;
-    wl_buffer_destroy(B->wlbuf);
+    if (!B->buffer) return;
+    wl_buffer_destroy(B->buffer);
     munmap(B->data, B->size);
     *B = (ShmBuffer){0};
 }
@@ -205,17 +206,21 @@ create_buffer(struct WaylandState *state)
 
 
 internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time);
+
 internal void
 xdg_surface_configure(void *data, struct xdg_surface * xsurface, u32 serial)
 {
     struct WaylandState *state = data;
     xdg_surface_ack_configure(xsurface, serial);
     
-    struct wl_buffer *buffer = create_buffer(state);
+    ShmBuffer *buf = get_free_buffer(state);
     struct wl_callback *first = wl_surface_frame(state->surface);
     static const struct wl_callback_listener listener = {.done = wl_frame_done};
     wl_callback_add_listener(first, &listener, state);
-    wl_surface_attach(state->surface, buffer, 0, 0);
+    if (buf) 
+    {
+        wl_surface_attach(state->surface, buf->buffer, 0, 0);
+    }
     wl_surface_commit(state->surface);
 }
 
@@ -292,55 +297,10 @@ toplevel_handle_configure(void *data
 
 static u32 color = 0xFF000000;
 
-internal void
-wl_surface_frame_done(void *data, struct wl_callback *cb, u32 time)
-{
-    struct WaylandState *S = data;
-    wl_callback_destroy(cb);
-    
-    for(int i = 0; i < (640 * 480); ++i)
-    {
-        S->framebuffer[i] = color;
-    }
-    color += 0x00000055;
-    
-    s32 next = (S->current_buffer + 1) & 1;
-    
-    if(S->buffers[next].busy)
-    {
-        wl_display_dispatch_pending(S->display);
-        if(S->buffers[next].busy)
-        {
-            if(S->buffers[S->current_buffer].busy)
-            {
-                goto schedule_next_frame;
-            } 
-            else 
-            {
-                next = S->current_buffer;
-            }
-        }
-    }
-    
-    ShmBuffer *B = &S->buffers[next];
-    
-    mm_memcpy(B->data, S->framebuffer, B->size);
-    wl_surface_attach(S->surface, B->wlbuf, 0,0);
-    wl_surface_damage_buffer(S->surface, 0, 0, S->width, S->height);
-    
-    schedule_next_frame: 
-    cb = wl_surface_frame(S->surface);
-    wl_callback_add_listener(cb, &wl_surface_frame_listener, S);
-    wl_surface_commit(S->surface);
-    
-    if (&S->buffers[next] == B)
-        B->busy =1, S->current_buffer = next;
-    
-    
-}
+internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time);
 
 global_var const struct wl_callback_listener wl_surface_frame_listener = {
-    .done = wl_surface_frame_done,
+    .done = wl_frame_done,
 };
 
 
@@ -349,38 +309,58 @@ global_var const struct xdg_toplevel_listener toplevel_listener = {
     .close = toplevel_handle_close_action,
 };
 
-static u32 color = 0xFF00FF00;
 void app_step(PlatformFrame *frame, void *user_ptr) {
     WaylandState *state = user_ptr; 
-    INFOMSG("frame");
-    for(int i = 0; i < (1920 * 1080); ++i)
+    ShmBuffer *B = &state->buffers[state->cur];
+    for(int i = 0; i < B->size; ++i)
     {
         state->framebuffer[i] = color;
     }
+    color += 0x00000011;
 
+    mm_memcpy(B->data, state->framebuffer, B->size);
+
+}
+
+internal
+ShmBuffer* get_free_buffer(WaylandState *state) {
+    for(int i = 0; i < 2; i++)
+    {
+        if (!state->buffers[i].busy) {
+            state->cur = i;
+            return &state->buffers[i];
+        }
+    }
+    return 0;
 }
 
 internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time) 
 {
-    WaylandState *w = data;
     wl_callback_destroy(cb);
+    WaylandState *w = data;
+
+    ShmBuffer *buf = get_free_buffer(w);
+    if (!buf){ 
+        wl_display_dispatch_pending(w->display);
+        buf = get_free_buffer(w);
+        if(!buf) return;
+    }
     
     //wl_display_dispatch_pending(w->display);
-
 
     if (w->frame_cb)
     {
         w->frame_cb(&(PlatformFrame){.dt = time, .width = 1920, .height = 1080}, data);
     }
 
-    mm_memcpy(w->data_buffer, w->framebuffer, 1920*1080);
-    wl_surface_attach(w->surface,w->buffer, 0, 0);
+    buf->busy = 1;
+
+    wl_surface_attach(w->surface, buf->buffer, 0, 0);
     wl_surface_damage_buffer(w->surface, 0, 0, 1920, 1080);
 
 
     struct wl_callback *next_cb = wl_surface_frame(w->surface);
-    static const struct wl_callback_listener listener = {.done = wl_frame_done};
-    wl_callback_add_listener(next_cb, &listener, w);
+    wl_callback_add_listener(next_cb, &wl_surface_frame_listener, w);
 
     wl_surface_commit(w->surface);
 }
@@ -428,6 +408,9 @@ int main(int argc, char *argv[])
     state.x_toplevel = xdg_surface_get_toplevel(state.x_surface);
     xdg_toplevel_set_title(state.x_toplevel, "example");
     xdg_toplevel_add_listener(state.x_toplevel, &toplevel_listener, &state);
+    create_shm_buffer(&state, &state.buffers[0], 1920, 1080);
+    create_shm_buffer(&state, &state.buffers[1], 1920, 1080);
+    state.cur = 0;
     wl_surface_commit(state.surface);
 
     //SET frame callback
