@@ -91,12 +91,16 @@ typedef struct WaylandState {
     struct wl_display *display;
     struct wl_compositor *compositor;
     struct wl_shm *shm;
-    struct xdg_wm_base *x_wm_base;
     
-    // Something
     struct wl_surface *surface;
+    // xdg
+    struct xdg_wm_base *x_wm_base;
     struct xdg_surface *x_surface;
     struct xdg_toplevel *x_toplevel;
+
+    // INPUT: seat
+    struct wl_seat *seat;
+    struct wl_pointer *pointer;
     
     u32 *framebuffer;
     PlatformFrameCallback frame_cb;
@@ -116,6 +120,9 @@ typedef struct WaylandState {
     
     b32 running;
     b32 configured;
+
+    s32 pointer_x;
+    s32 pointer_y;
     
 } WaylandState;
 internal ShmBuffer* get_free_buffer(WaylandState *state);
@@ -125,7 +132,6 @@ wl_buffer_release(void* data, struct wl_buffer *buffer)
     // sent by the compositor
     ShmBuffer *b = data;
     if (b){
-        INFO("freed %p", b->buffer);
         b->busy = 0;
     }
 }
@@ -187,6 +193,7 @@ xdg_surface_configure(void *data, struct xdg_surface * xsurface, u32 serial)
 {
     struct WaylandState *state = data;
     xdg_surface_ack_configure(xsurface, serial);
+    INFO("%d", serial);
     
     if (!state->configured)
     {
@@ -218,6 +225,59 @@ global_var const struct xdg_wm_base_listener x_wm_base_listener = {
     .ping = xdg_wm_base_ping,
 };
 
+
+void pointer_handle_enter(void *data, struct wl_pointer *pointer,
+                          uint32_t serial, struct wl_surface *surface,
+                          wl_fixed_t sx, wl_fixed_t sy)
+{
+    // El puntero ha entrado en una superficie
+}
+
+void pointer_handle_leave(void *data, struct wl_pointer *pointer,
+                          uint32_t serial, struct wl_surface *surface)
+{
+    // El puntero ha salido de la superficie
+}
+
+void pointer_handle_motion(void *data, struct wl_pointer *pointer,
+                           uint32_t time, wl_fixed_t sx, wl_fixed_t sy)
+{
+    WaylandState *state = data;
+    state->pointer_x = wl_fixed_to_int(sx);
+    state->pointer_y = wl_fixed_to_int(sy);
+}
+
+void pointer_handle_button(void *data, struct wl_pointer *pointer,
+                           uint32_t serial, uint32_t time,
+                           uint32_t button, uint32_t state)
+{
+    // state = WL_POINTER_BUTTON_STATE_PRESSED o RELEASED
+}
+
+void pointer_handle_axis(void *data, struct wl_pointer *pointer,
+                         uint32_t time, uint32_t axis, wl_fixed_t value)
+{
+    // Scroll
+}
+
+
+/* Here we should handle all the pointer events */
+void pointer_handle_frame(void *data, struct wl_pointer *pointer)
+{
+    WaylandState *state = data;
+    INFO("Pointer (%d, %d)", state->pointer_x, state->pointer_y);
+    // TODO (lucashdez)
+}
+
+global_var struct wl_pointer_listener pointer_listener = {
+    .enter = pointer_handle_enter,
+    .leave = pointer_handle_leave,
+    .motion = pointer_handle_motion,
+    .button = pointer_handle_button,
+    .axis = pointer_handle_axis,
+    .frame = pointer_handle_frame,
+};
+
 internal void
 registry_handle_global(void *data, struct wl_registry *registry,
                        uint32_t name, const char *interface, uint32_t version)
@@ -243,6 +303,11 @@ registry_handle_global(void *data, struct wl_registry *registry,
             state->x_wm_base = wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
             xdg_wm_base_add_listener(state->x_wm_base, &x_wm_base_listener, state);
         }
+        if (strcmp(interface, wl_seat_interface.name) == 0) {
+            state->seat = wl_registry_bind(registry, name, &wl_seat_interface, version);
+            state->pointer = wl_seat_get_pointer(state->seat);
+            wl_pointer_add_listener(state->pointer, &pointer_listener, state);
+        };
     }
 }
 
@@ -271,6 +336,11 @@ toplevel_handle_configure(void *data
                           , s32 width, s32 height
                           , struct wl_array *states) 
 {
+    WaylandState *state = data;
+    INFO("GOT TOPLEVEL CONFIGURE, %d %d", width, height);
+    //state->width = width;
+    //state->height = height;
+    //for (int buf_id = 0; < state->buffers; ++buf_id)
     
 }
 
@@ -308,16 +378,17 @@ void app_step(PlatformFrame *frame, void *user_ptr) {
         u32* pixel = Row;
         for (int X = 0; X < 1920; ++X) 
         {
-            u32 r = (X + (s32)XOffset) & 0xFF;  // componente rojo
-            u32 g = (Y + (s32)YOffset) & 0xFF;  // componente verde
-            u32 b = 0;                           // componente azul
-            u32 a = 0xFF;                        // componente alpha
-            *pixel++ = (a << 24) | (b << 16) | (g << 8) | r;
+            u32 r = (X + (s32)XOffset) & 0xFF;
+            u32 g = (Y + (s32)YOffset) & 0xFF;
+            u32 b = 0;
+            u32 a = 0xFF;
+           *pixel++ = (a << 24) | (b << 16) | (g << 8) | r;
         }
         Row += 1920;
     }
     
-    INFO("dt=%llu ms (%.2f fps)", frame->dt, 1000.0f / (frame->dt ? frame->dt : 1));
+    // Present this in the upper corner
+    //INFO("dt=%llu ms (%.2f fps)", frame->dt, 1000.0f / (frame->dt ? frame->dt : 1));
     
     
 }
@@ -340,7 +411,6 @@ internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time)
     WaylandState *w = data;
     
     ShmBuffer *buf = get_free_buffer(w);
-    INFO("Got %p", buf->buffer);
     if (!buf){ 
         return;
     }
@@ -356,10 +426,9 @@ internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time)
         u32 dt = now_ms - w->last_frame;
 
         w->last_frame = now_ms;
-        w->frame_cb(&(PlatformFrame){.dt = dt, .width = 1920, .height = 1080}, data);
+        w->frame_cb(&(PlatformFrame){.dt = dt, .width = w->width, .height = w->height}, data);
     }
     
-    INFO("busied %p", buf->buffer);
     
     wl_surface_attach(w->surface, buf->buffer, 0, 0);
     wl_surface_damage_buffer(w->surface, 0, 0, w->width, w->height);
@@ -394,7 +463,6 @@ int main(int argc, char *argv[])
     struct wl_display *display = wl_display_connect(0);
     s32 wl_fd = wl_display_get_fd(display);
     
-    INFO("display connected with fd: %d", wl_fd);
     WaylandState state = {0};
     state.width = 1920;
     state.height = 1080;
@@ -406,11 +474,10 @@ int main(int argc, char *argv[])
     struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, &state);
     wl_display_roundtrip(state.display);
-    
     state.surface = wl_compositor_create_surface(state.compositor);
     state.x_surface = xdg_wm_base_get_xdg_surface(state.x_wm_base, state.surface);
-    xdg_surface_add_listener(state.x_surface, &x_surface_listener, &state);
     state.x_toplevel = xdg_surface_get_toplevel(state.x_surface);
+    xdg_surface_add_listener(state.x_surface, &x_surface_listener, &state);
     xdg_toplevel_set_title(state.x_toplevel, "example");
     xdg_toplevel_add_listener(state.x_toplevel, &toplevel_listener, &state);
     s32 result = create_shm_buffer(&state, &state.buffers[0], 1920, 1080);
@@ -427,7 +494,7 @@ int main(int argc, char *argv[])
     //SET frame callback
     state.frame_cb = app_step;
     state.frame_user = &state;
-    /////
+    //-
     
     
     while(running == 1) 
@@ -437,7 +504,6 @@ int main(int argc, char *argv[])
     
     
     wl_display_disconnect(state.display);
-    INFOMSG("display disconnected");
     
     
     return 0;
