@@ -2,6 +2,9 @@
 #ifndef BASE_H
 #define BASE_H
 
+#define VIRTUAL_WIDTH 1920
+#define VIRTUAL_HEIGTH 1080
+
 //~
 //base-types
 
@@ -42,6 +45,14 @@ typedef struct StringConstChar {
     const char* str;
     u64 size;
 } StringChar;  
+
+
+// Math
+typedef struct Vec2s32 {
+	s32 x;
+	s32 y;
+
+} Vec2s32, Vec2;
 
 
 ///////////////////////////////////

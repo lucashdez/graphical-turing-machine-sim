@@ -1,11 +1,14 @@
 #include "base/base.h"
+#include "platform/linux/wayland/wayland.h"
 #include "platform/platform.h"
-#include "renderer/api/vulkan/lhvk.h"
 
 #include "base/base.c"
-#include "renderer/api/vulkan/lhvk.c"
+#include "platform/linux/wayland/wayland.c"
 
+#include "renderer/api/software/software_renderer.c"
 // THIS GOES TO WAYLAND
+#include <stdint.h>
+#include <wayland-client-protocol.h>
 #include <wayland-client.h>
 #include "platform/linux/wayland/xdg-shell-protocol.h"
 #include "platform/linux/wayland/xdg-shell-protocol.c"
@@ -78,54 +81,6 @@ allocate_shm_file(size_t size)
     return fd;
 }
 
-
-typedef struct ShmBuffer {
-    struct wl_buffer *buffer;
-    void *data;
-    s32 size;
-    s32 stride;
-    b32 busy;
-} ShmBuffer;
-
-typedef struct WaylandState {
-    struct wl_display *display;
-    struct wl_compositor *compositor;
-    struct wl_shm *shm;
-    
-    struct wl_surface *surface;
-    // xdg
-    struct xdg_wm_base *x_wm_base;
-    struct xdg_surface *x_surface;
-    struct xdg_toplevel *x_toplevel;
-
-    // INPUT: seat
-    struct wl_seat *seat;
-    struct wl_pointer *pointer;
-    
-    u32 *framebuffer;
-    PlatformFrameCallback frame_cb;
-    void *frame_user;
-    
-    u32 last_frame;
-
-    s32 width;
-    s32 height;
-    
-    // buffer thingy
-    struct wl_buffer *buffer;
-    void* data_buffer;
-    
-    ShmBuffer buffers[3];
-    s32 cur;
-    
-    b32 running;
-    b32 configured;
-
-    s32 pointer_x;
-    s32 pointer_y;
-    
-} WaylandState;
-internal ShmBuffer* get_free_buffer(WaylandState *state);
 internal void 
 wl_buffer_release(void* data, struct wl_buffer *buffer) 
 {
@@ -199,9 +154,10 @@ xdg_surface_configure(void *data, struct xdg_surface * xsurface, u32 serial)
     {
         state->configured = true;
         
-        ShmBuffer *buf = get_free_buffer(state);
-        if (buf) 
+        b32 found = lwl_get_free_buffer(state);
+        if (found) 
         {
+			ShmBuffer *buf = &state->buffers[state->cur];
             wl_surface_attach(state->surface, buf->buffer, 0, 0);
         }
         
@@ -336,12 +292,12 @@ toplevel_handle_configure(void *data
                           , s32 width, s32 height
                           , struct wl_array *states) 
 {
-    WaylandState *state = data;
+	PlatformWindow *wnd  = data;
+    WaylandState *state = wnd->os_window;
     INFO("GOT TOPLEVEL CONFIGURE, %d %d", width, height);
-    //state->width = width;
-    //state->height = height;
-    //for (int buf_id = 0; < state->buffers; ++buf_id)
-    
+	wnd->width = width;
+	wnd->height = height; 
+	xdg_surface_set_window_geometry(state->x_surface, 0, 0, wnd->width, wnd->height);
 }
 
 
@@ -360,61 +316,25 @@ global_var const struct xdg_toplevel_listener toplevel_listener = {
 
 
 
-void app_step(PlatformFrame *frame, void *user_ptr) {
-    WaylandState *state = user_ptr; 
-    ShmBuffer *B = &state->buffers[state->cur];
-    u32* Row = (u32*)B->data;
+void app_step(PlatformWindow *w, void *user_ptr) {
+	PlatformFrame *frame = &w->frame_info;
+	renderer_begin_section(w);
+
+	renderer_draw_rect(w, w->width/2, w->height/2, 100, 100, 0xFFFF0000, true);
+	renderer_draw_rect(w, w->width/3, w->height/3, 100, 100, 0xFF00FF00, true);
+	renderer_draw_rect(w, 700, 600, 50, 50, 0x220000FF, true);
     
-    local_persist f32 XOffset = 0;
-    local_persist f32 YOffset = 0;
-    
-    float speed = 300.0f;
-    f32 dt_s = frame->dt/1000.0f;
-    XOffset += speed * dt_s;
-    //YOffset += speed * dt_s;
-    
-    for (int Y = 0; Y < 1080; ++Y)
-    {
-        u32* pixel = Row;
-        for (int X = 0; X < 1920; ++X) 
-        {
-            u32 r = (X + (s32)XOffset) & 0xFF;
-            u32 g = (Y + (s32)YOffset) & 0xFF;
-            u32 b = 0;
-            u32 a = 0xFF;
-           *pixel++ = (a << 24) | (b << 16) | (g << 8) | r;
-        }
-        Row += 1920;
-    }
-    
+	renderer_end_section(w);
     // Present this in the upper corner
     //INFO("dt=%llu ms (%.2f fps)", frame->dt, 1000.0f / (frame->dt ? frame->dt : 1));
-    
-    
 }
 
-internal
-ShmBuffer* get_free_buffer(WaylandState *state) {
-    for(int i = 0; i < 3; i++)
-    {
-        if (!state->buffers[i].busy) {
-            state->cur = i;
-            return &state->buffers[i];
-        }
-    }
-    return 0;
-}
 
 internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time) 
 {
     wl_callback_destroy(cb);
-    WaylandState *w = data;
-    
-    ShmBuffer *buf = get_free_buffer(w);
-    if (!buf){ 
-        return;
-    }
-    buf->busy = 1;
+    PlatformWindow *wnd = data;
+	WaylandState *w = wnd->os_window;
     
     //wl_display_dispatch_pending(w->display);
     
@@ -424,24 +344,21 @@ internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time)
         clock_gettime(CLOCK_MONOTONIC,&ts);
         u32 now_ms = ts.tv_sec*1000 +ts.tv_nsec/1000000;
         u32 dt = now_ms - w->last_frame;
-
+		wnd->frame_info.dt = dt;
         w->last_frame = now_ms;
-        w->frame_cb(&(PlatformFrame){.dt = dt, .width = w->width, .height = w->height}, data);
+        w->frame_cb(wnd, w->frame_user);
     }
+
     
-    
+	ShmBuffer *buf = &w->buffers[w->cur]; 
     wl_surface_attach(w->surface, buf->buffer, 0, 0);
-    wl_surface_damage_buffer(w->surface, 0, 0, w->width, w->height);
+    wl_surface_damage_buffer(w->surface, 0, 0, wnd->width, wnd->height);
     wl_surface_commit(w->surface);
 
+
     struct wl_callback *next_cb = wl_surface_frame(w->surface);
-    wl_callback_add_listener(next_cb, &wl_surface_frame_listener, w);
+    wl_callback_add_listener(next_cb, &wl_surface_frame_listener, wnd);
 }
-
-
-
-
-
 
 //~ MAIN
 int main(int argc, char *argv[])
@@ -454,8 +371,8 @@ int main(int argc, char *argv[])
 #endif
     
     PlatformWindow window = {0};
-    window.width = 800;
-    window.height = 600;
+    window.width = 1920;
+    window.height = 1080;
     
     Arena renderer_arena = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, MB(256));
     
@@ -464,12 +381,11 @@ int main(int argc, char *argv[])
     s32 wl_fd = wl_display_get_fd(display);
     
     WaylandState state = {0};
-    state.width = 1920;
-    state.height = 1080;
     state.configured = 0;
     state.last_frame = 0;
     state.display = display;
     state.framebuffer = MMPushArrayZeros(&renderer_arena, u32, 1920*1080);
+	window.os_window = &state;
     
     struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, &state);
@@ -479,7 +395,8 @@ int main(int argc, char *argv[])
     state.x_toplevel = xdg_surface_get_toplevel(state.x_surface);
     xdg_surface_add_listener(state.x_surface, &x_surface_listener, &state);
     xdg_toplevel_set_title(state.x_toplevel, "example");
-    xdg_toplevel_add_listener(state.x_toplevel, &toplevel_listener, &state);
+    xdg_toplevel_add_listener(state.x_toplevel, &toplevel_listener, &window);
+	xdg_surface_set_window_geometry(state.x_surface, 0, 0, window.width, window.height);
     s32 result = create_shm_buffer(&state, &state.buffers[0], 1920, 1080);
     result = create_shm_buffer(&state, &state.buffers[1], 1920, 1080);
     result = create_shm_buffer(&state, &state.buffers[2], 1920, 1080);
@@ -487,9 +404,10 @@ int main(int argc, char *argv[])
     
     struct wl_callback *first = wl_surface_frame(state.surface);
     static const struct wl_callback_listener listener = {.done = wl_frame_done};
-    wl_callback_add_listener(first, &listener, &state);
+    wl_callback_add_listener(first, &listener, &window);
     
     wl_surface_commit(state.surface);
+
     
     //SET frame callback
     state.frame_cb = app_step;
@@ -501,10 +419,8 @@ int main(int argc, char *argv[])
     {
         wl_display_dispatch(display);
     }
-    
-    
+
     wl_display_disconnect(state.display);
-    
-    
+
     return 0;
 }
