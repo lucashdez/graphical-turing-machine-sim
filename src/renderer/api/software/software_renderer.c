@@ -10,34 +10,18 @@ internal void renderer_end_section(PlatformWindow *w) {
 	return;
 }
 
-static s32 xOffset = 0;
 internal void
-renderer_draw_rect(PlatformWindow *window, s32 x, s32 y, s32 w, s32 h, u32 color, b32 filled)
+renderer_draw_rect(PlatformWindow *window, Rects32 rect, u32 color, b32 filled)
 {
 	u32* fb = pltf_get_framebuffer(window);
-
-	x = x + xOffset;
-	
-	/* s32 sx1 = (x * window->width) / VIRTUAL_WIDTH; */
-	/* s32 sy1 = (y * window->height) / VIRTUAL_HEIGTH; */
-	/* s32 sx2 = ((x+w) * window->width) / VIRTUAL_WIDTH; */
-	/* s32 sy2 = ((y+h) * window->height) / VIRTUAL_HEIGTH; */
-
-
+	s32 rx1 = (rect.p.x * window->width) / VIRTUAL_WIDTH;
+	s32 rx2 = ((rect.p.x + rect.width) * window->width) / VIRTUAL_WIDTH;
+	s32 ry1 = (rect.p.y * window->height) / VIRTUAL_HEIGHT;
+	s32 ry2 = ((rect.p.y + rect.height) * window->height) / VIRTUAL_HEIGHT;
 	s32 y1, x1;
-	for(y1 = y; y1 < y + h; ++y1)
-	  for(x1 = x; x1 < x + w; ++x1) {
-		fb[y1 * 1920 + x1] = color;
-
-	  }
-	
-
-
-	/* for(s32 y2 = sy1; y2 < sy2; ++y2) */
-	/* for (s32 x2 = sx1 ; x2 < sx2; ++x2) */
-	/*   { */
-	/* 	fb[y2*window->width+x2] = color; */
-	/*   } */
-
-	xOffset = (xOffset + 1) % 100;
+	for (y1 = ry1; y1 < ry2; ++y1)
+		for (x1 = rx1; x1 < rx2; ++x1)
+			{
+				fb[y1 * window->width + x1] = color;
+			}
 }

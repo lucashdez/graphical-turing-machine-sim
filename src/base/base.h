@@ -3,7 +3,7 @@
 #define BASE_H
 
 #define VIRTUAL_WIDTH 1920
-#define VIRTUAL_HEIGTH 1080
+#define VIRTUAL_HEIGHT 1080
 
 /*~ base-types */
 
@@ -52,6 +52,22 @@ typedef struct Vec2s32 {
 	s32 y;
 
 } Vec2s32, Vec2;
+
+typedef union Rects32 {
+	struct {
+		s32 x1, y1, x2, y2;
+	};
+
+	struct {
+		Vec2s32 p1, p2, p3, p4;
+	};
+
+	struct {
+		Vec2s32 p;
+		s32 width, height;
+	};
+	
+} Rects32;
 
 
 

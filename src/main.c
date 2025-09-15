@@ -12,6 +12,7 @@
 #include <wayland-client.h>
 #include "platform/linux/wayland/xdg-shell-protocol.h"
 #include "platform/linux/wayland/xdg-shell-protocol.c"
+#include "renderer/renderer.h"
 
 
 #include <stdio.h>
@@ -39,7 +40,8 @@ randname(char* buf)
     struct timespec ts = {0};
     clock_gettime(CLOCK_REALTIME, &ts);
     long r = ts.tv_nsec;
-    for(int i = 0; i < 6; ++i)
+	int i;
+    for(i = 0; i < 6; ++i)
     {
         buf[i] = 'A' + (r&15) + (r&16)*2;
         r >>= 5;
@@ -146,25 +148,40 @@ internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time);
 internal void
 xdg_surface_configure(void *data, struct xdg_surface * xsurface, u32 serial)
 {
-    struct WaylandState *state = data;
+    struct PlatformWindow *w = data;
+	struct WaylandState *state = w->os_window;
     xdg_surface_ack_configure(xsurface, serial);
-    INFO("%d", serial);
     
     if (!state->configured)
-    {
-        state->configured = true;
+		{
+			state->configured = true;
         
-        b32 found = lwl_get_free_buffer(state);
-        if (found) 
-        {
-			ShmBuffer *buf = &state->buffers[state->cur];
-            wl_surface_attach(state->surface, buf->buffer, 0, 0);
-        }
+			b32 found = lwl_get_free_buffer(state);
+			if (found) 
+				{
+					ShmBuffer *buf = &state->buffers[state->cur];
+					wl_surface_attach(state->surface, buf->buffer, 0, 0);
+				}
         
-        wl_surface_commit(state->surface);
+			wl_surface_commit(state->surface);
         
-    }
-    
+		}
+
+	if (w->width > 0 && w->height > 0)
+		{
+			s32 i;
+			for (i = 0; i < 3; ++i)
+				{
+					if (state->buffers[i].data)
+						{
+					munmap(state->buffers[i].data, state->buffers[i].size);
+					wl_buffer_destroy(state->buffers[i].buffer);
+						}
+					create_shm_buffer(state, &state->buffers[i], w->width, w->height);
+
+				}
+			state->cur = 0;
+		}
 }
 
 global_var const struct xdg_surface_listener x_surface_listener = {
@@ -316,17 +333,36 @@ global_var const struct xdg_toplevel_listener toplevel_listener = {
 
 
 
+static s32 xOffset = 0; 
 void app_step(PlatformWindow *w, void *user_ptr) {
 	PlatformFrame *frame = &w->frame_info;
 	renderer_begin_section(w);
 
-	renderer_draw_rect(w, w->width/2, w->height/2, 100, 100, 0xFFFF0000, true);
-	renderer_draw_rect(w, w->width/3, w->height/3, 100, 100, 0xFF00FF00, true);
-	renderer_draw_rect(w, 700, 600, 50, 50, 0x220000FF, true);
+	Rects32 r1 = {
+		.p = {.x = 0, .y = 0}, 
+		.width = VIRTUAL_WIDTH,
+		.height = 50 
+	};
+	Rects32 r2 = {
+		.p = {.x = 0, .y = 50}, 
+		.width = VIRTUAL_WIDTH,
+		.height = VIRTUAL_HEIGHT - 50 
+	};
+
+	Rects32 r3 = {
+		.p = {.x = 10 + xOffset, .y = VIRTUAL_HEIGHT/2},
+		.width = 50,
+		.height = 50,
+	};
+
+	renderer_draw_rect(w, r1, 0xFFaa0000, true);
+	renderer_draw_rect(w, r2, 0xFF0000aa, true);
+	renderer_draw_rect(w, r3, 0xFF00FF00, true);
     
 	renderer_end_section(w);
+	xOffset = (xOffset + 1) % 500;
     /*  Present this in the upper corner */
-    /* INFO("dt=%llu ms (%.2f fps)", frame->dt, 1000.0f / (frame->dt ? frame->dt : 1)); */
+    INFO("dt=%llu ms (%.2f fps)", frame->dt, 1000.0f / (frame->dt ? frame->dt : 1));
 }
 
 
@@ -393,7 +429,7 @@ int main(int argc, char *argv[])
     state.surface = wl_compositor_create_surface(state.compositor);
     state.x_surface = xdg_wm_base_get_xdg_surface(state.x_wm_base, state.surface);
     state.x_toplevel = xdg_surface_get_toplevel(state.x_surface);
-    xdg_surface_add_listener(state.x_surface, &x_surface_listener, &state);
+    xdg_surface_add_listener(state.x_surface, &x_surface_listener, &window);
     xdg_toplevel_set_title(state.x_toplevel, "example");
     xdg_toplevel_add_listener(state.x_toplevel, &toplevel_listener, &window);
 	xdg_surface_set_window_geometry(state.x_surface, 0, 0, window.width, window.height);
