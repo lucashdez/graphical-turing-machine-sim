@@ -2,7 +2,8 @@
 
 internal
 b32 lwl_get_free_buffer(WaylandState *state) {
-    for(int i = 0; i < 3; i++)
+	int i;
+    for(i = 0; i < 3; i++)
     {
         if (!state->buffers[i].busy) {
             state->cur = i;

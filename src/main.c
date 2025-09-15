@@ -6,7 +6,7 @@
 #include "platform/linux/wayland/wayland.c"
 
 #include "renderer/api/software/software_renderer.c"
-// THIS GOES TO WAYLAND
+/*  THIS GOES TO WAYLAND */
 #include <stdint.h>
 #include <wayland-client-protocol.h>
 #include <wayland-client.h>
@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-//~ This will be moved to some wayland thingy
+/* ~ This will be moved to some wayland thingy */
 
 #undef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L
@@ -36,7 +36,7 @@ global_var const struct wl_callback_listener wl_surface_frame_listener;
 internal void 
 randname(char* buf)
 {
-    struct timespec ts;
+    struct timespec ts = {0};
     clock_gettime(CLOCK_REALTIME, &ts);
     long r = ts.tv_nsec;
     for(int i = 0; i < 6; ++i)
@@ -51,7 +51,7 @@ create_shm_file(void)
 {
     int retries = 100;
     do {
-        char name[] = "/wl_shm-XXXXXX"; // This is some ANSI C thingy lel wayland <3 
+        char name[] = "/wl_shm-XXXXXX"; /* This is some ANSI C thingy lel wayland <3  */
         randname(name + sizeof(name) - 7);
         --retries;
         int fd = shm_open(name, O_RDWR | O_CREAT | O_EXCL, 0600);
@@ -84,7 +84,7 @@ allocate_shm_file(size_t size)
 internal void 
 wl_buffer_release(void* data, struct wl_buffer *buffer) 
 {
-    // sent by the compositor
+    /*  sent by the compositor */
     ShmBuffer *b = data;
     if (b){
         b->busy = 0;
@@ -186,13 +186,13 @@ void pointer_handle_enter(void *data, struct wl_pointer *pointer,
                           uint32_t serial, struct wl_surface *surface,
                           wl_fixed_t sx, wl_fixed_t sy)
 {
-    // El puntero ha entrado en una superficie
+    /*  El puntero ha entrado en una superficie */
 }
 
 void pointer_handle_leave(void *data, struct wl_pointer *pointer,
                           uint32_t serial, struct wl_surface *surface)
 {
-    // El puntero ha salido de la superficie
+    /*  El puntero ha salido de la superficie */
 }
 
 void pointer_handle_motion(void *data, struct wl_pointer *pointer,
@@ -207,13 +207,13 @@ void pointer_handle_button(void *data, struct wl_pointer *pointer,
                            uint32_t serial, uint32_t time,
                            uint32_t button, uint32_t state)
 {
-    // state = WL_POINTER_BUTTON_STATE_PRESSED o RELEASED
+    /*  state = WL_POINTER_BUTTON_STATE_PRESSED o RELEASED */
 }
 
 void pointer_handle_axis(void *data, struct wl_pointer *pointer,
                          uint32_t time, uint32_t axis, wl_fixed_t value)
 {
-    // Scroll
+    /*  Scroll */
 }
 
 
@@ -222,7 +222,7 @@ void pointer_handle_frame(void *data, struct wl_pointer *pointer)
 {
     WaylandState *state = data;
     INFO("Pointer (%d, %d)", state->pointer_x, state->pointer_y);
-    // TODO (lucashdez)
+    /*  TODO (lucashdez) */
 }
 
 global_var struct wl_pointer_listener pointer_listener = {
@@ -271,7 +271,7 @@ internal void
 registry_handle_global_remove(void *data, struct wl_registry *registry,
                               uint32_t name)
 {
-	// This space deliberately left blank
+	/*  This space deliberately left blank */
 }
 
 static const struct wl_registry_listener
@@ -325,8 +325,8 @@ void app_step(PlatformWindow *w, void *user_ptr) {
 	renderer_draw_rect(w, 700, 600, 50, 50, 0x220000FF, true);
     
 	renderer_end_section(w);
-    // Present this in the upper corner
-    //INFO("dt=%llu ms (%.2f fps)", frame->dt, 1000.0f / (frame->dt ? frame->dt : 1));
+    /*  Present this in the upper corner */
+    /* INFO("dt=%llu ms (%.2f fps)", frame->dt, 1000.0f / (frame->dt ? frame->dt : 1)); */
 }
 
 
@@ -336,7 +336,7 @@ internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time)
     PlatformWindow *wnd = data;
 	WaylandState *w = wnd->os_window;
     
-    //wl_display_dispatch_pending(w->display);
+    /* wl_display_dispatch_pending(w->display); */
     
     if (w->frame_cb)
     {
@@ -360,7 +360,7 @@ internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time)
     wl_callback_add_listener(next_cb, &wl_surface_frame_listener, wnd);
 }
 
-//~ MAIN
+/* ~ MAIN */
 int main(int argc, char *argv[])
 {
     GLOBAL_BASE_ALLOCATOR = mm_create_malloc_base_memory();
@@ -409,10 +409,10 @@ int main(int argc, char *argv[])
     wl_surface_commit(state.surface);
 
     
-    //SET frame callback
+    /* SET frame callback */
     state.frame_cb = app_step;
     state.frame_user = &state;
-    //-
+    /* - */
     
     
     while(running == 1) 

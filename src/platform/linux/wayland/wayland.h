@@ -21,12 +21,12 @@ typedef struct WaylandState {
     struct wl_shm *shm;
     
     struct wl_surface *surface;
-    // xdg
+    /*  xdg */
     struct xdg_wm_base *x_wm_base;
     struct xdg_surface *x_surface;
     struct xdg_toplevel *x_toplevel;
 
-    // INPUT: seat
+    /*  INPUT: seat */
     struct wl_seat *seat;
     struct wl_pointer *pointer;
     
@@ -39,7 +39,7 @@ typedef struct WaylandState {
     s32 width;
     s32 height;
     
-    // buffer thingy
+    /*  buffer thingy */
     struct wl_buffer *buffer;
     void* data_buffer;
     

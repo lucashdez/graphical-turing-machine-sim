@@ -24,8 +24,9 @@ renderer_draw_rect(PlatformWindow *window, s32 x, s32 y, s32 w, s32 h, u32 color
 	/* s32 sy2 = ((y+h) * window->height) / VIRTUAL_HEIGTH; */
 
 
-	for(s32 y1 = y; y1 < y + h; ++y1)
-	  for(s32 x1 = x; x1 < x + w; ++x1) {
+	s32 y1, x1;
+	for(y1 = y; y1 < y + h; ++y1)
+	  for(x1 = x; x1 < x + w; ++x1) {
 		fb[y1 * 1920 + x1] = color;
 
 	  }

@@ -22,13 +22,13 @@ typedef struct PlatformWindow {
 } PlatformWindow;
 
 
-//~ ENUMS
+/* ~ ENUMS */
 
 typedef enum PlatformEvent {
     PltfNone,
 } PlatformEvent;
 
-//~ API
+/* ~ API */
 internal void* pltf_mem_reserve();
 internal void* pltf_mem_commit();
 internal void pltf_mem_decommit(void* ptr, u64 size);
@@ -54,4 +54,4 @@ internal void pltf_window_run_loop(PlatformWindow *wnd);
 internal void* pltf_get_framebuffer(PlatformWindow *wnd);
 internal s32 pltf_renderer_begin_section(PlatformWindow *w);
 
-#endif //PLATFORM_H
+#endif /* PLATFORM_H */

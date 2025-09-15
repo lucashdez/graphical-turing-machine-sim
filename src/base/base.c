@@ -31,7 +31,7 @@ mm_memcpymv(void* dest, void* src, u64 len) {
     return dest;
 }
 
-// TODO Own Memory management with virtualalloc
+/*  TODO Own Memory management with virtualalloc */
 
 internal void* 
 mm_malloc_reserve(void* ctx, u64 size) {
@@ -73,7 +73,7 @@ mm_make_arena(struct MM_BaseMemory *base) {
 
 internal struct 
 Arena mm_scratch_arena() {
-    // TODO CHANGE THIS TO GLOBAL
+    /*  TODO CHANGE THIS TO GLOBAL */
     struct Arena result = mm_make_arena_reserve(GLOBAL_BASE_ALLOCATOR, KB(64));
     return result;
 }

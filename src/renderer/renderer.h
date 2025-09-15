@@ -7,7 +7,7 @@
 
 typedef struct RendererState 
 {
-    u32 color; //AARRGGBB
+    u32 color; /* AARRGGBB */
 } RendererState;
 
 
@@ -22,7 +22,7 @@ internal void renderer_present(void);
 internal s32 renderer_begin_section(PlatformWindow* wnd);
 internal void renderer_end_section(PlatformWindow* wnd);
 
-// Primitivas
+/*  Primitivas */
 internal void renderer_draw_pixel(s32 x, s32 y, u32 color);
 internal void renderer_draw_line(s32 x0, s32 y0, s32 x1, s32 y1, u32 color);
 internal void renderer_draw_rect(PlatformWindow *window, s32 x, s32 y, s32 w, s32 h, u32 color, b32 filled);
@@ -31,4 +31,4 @@ internal void renderer_draw_circle(s32 cx, s32 cy, s32 radius, u32 color, b32 fi
 
 
 
-#endif //RENDERER_H
+#endif /* RENDERER_H */
