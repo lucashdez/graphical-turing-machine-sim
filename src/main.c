@@ -153,35 +153,35 @@ xdg_surface_configure(void *data, struct xdg_surface * xsurface, u32 serial)
     xdg_surface_ack_configure(xsurface, serial);
     
     if (!state->configured)
-		{
-			state->configured = true;
+    {
+        state->configured = true;
         
-			b32 found = lwl_get_free_buffer(state);
-			if (found) 
-				{
-					ShmBuffer *buf = &state->buffers[state->cur];
-					wl_surface_attach(state->surface, buf->buffer, 0, 0);
-				}
+        b32 found = lwl_get_free_buffer(state);
+        if (found) 
+        {
+            ShmBuffer *buf = &state->buffers[state->cur];
+            wl_surface_attach(state->surface, buf->buffer, 0, 0);
+        }
         
-			wl_surface_commit(state->surface);
+        wl_surface_commit(state->surface);
         
-		}
-
+    }
+    
 	if (w->width > 0 && w->height > 0)
-		{
-			s32 i;
-			for (i = 0; i < 3; ++i)
-				{
-					if (state->buffers[i].data)
-						{
-					munmap(state->buffers[i].data, state->buffers[i].size);
-					wl_buffer_destroy(state->buffers[i].buffer);
-						}
-					create_shm_buffer(state, &state->buffers[i], w->width, w->height);
-
-				}
-			state->cur = 0;
-		}
+    {
+        s32 i;
+        for (i = 0; i < 3; ++i)
+        {
+            if (state->buffers[i].data)
+            {
+                munmap(state->buffers[i].data, state->buffers[i].size);
+                wl_buffer_destroy(state->buffers[i].buffer);
+            }
+            create_shm_buffer(state, &state->buffers[i], w->width, w->height);
+            
+        }
+        state->cur = 0;
+    }
 }
 
 global_var const struct xdg_surface_listener x_surface_listener = {
@@ -337,7 +337,7 @@ static s32 xOffset = 0;
 void app_step(PlatformWindow *w, void *user_ptr) {
 	PlatformFrame *frame = &w->frame_info;
 	renderer_begin_section(w);
-
+    
 	Rects32 r1 = {
 		.p = {.x = 0, .y = 0}, 
 		.width = VIRTUAL_WIDTH,
@@ -348,16 +348,29 @@ void app_step(PlatformWindow *w, void *user_ptr) {
 		.width = VIRTUAL_WIDTH,
 		.height = VIRTUAL_HEIGHT - 50 
 	};
-
+    
 	Rects32 r3 = {
 		.p = {.x = 10 + xOffset, .y = VIRTUAL_HEIGHT/2},
 		.width = 50,
 		.height = 50,
 	};
-
+    
+    
+	Rects32 r4 = {
+		.p = {.x = 80 + xOffset * 12, .y = VIRTUAL_HEIGHT/2},
+		.width = 50,
+		.height = 50,
+	};
+    
+    
+    
+    
 	renderer_draw_rect(w, r1, 0xFFaa0000, true);
 	renderer_draw_rect(w, r2, 0xFF0000aa, true);
 	renderer_draw_rect(w, r3, 0xFF00FF00, true);
+	renderer_draw_rect(w, r4, 0xFF00FFFF, true);
+    
+    
     
 	renderer_end_section(w);
 	xOffset = (xOffset + 1) % 500;
@@ -384,14 +397,14 @@ internal void wl_frame_done(void *data, struct wl_callback *cb, u32 time)
         w->last_frame = now_ms;
         w->frame_cb(wnd, w->frame_user);
     }
-
+    
     
 	ShmBuffer *buf = &w->buffers[w->cur]; 
     wl_surface_attach(w->surface, buf->buffer, 0, 0);
     wl_surface_damage_buffer(w->surface, 0, 0, wnd->width, wnd->height);
     wl_surface_commit(w->surface);
-
-
+    
+    
     struct wl_callback *next_cb = wl_surface_frame(w->surface);
     wl_callback_add_listener(next_cb, &wl_surface_frame_listener, wnd);
 }
@@ -443,7 +456,7 @@ int main(int argc, char *argv[])
     wl_callback_add_listener(first, &listener, &window);
     
     wl_surface_commit(state.surface);
-
+    
     
     /* SET frame callback */
     state.frame_cb = app_step;
@@ -455,8 +468,8 @@ int main(int argc, char *argv[])
     {
         wl_display_dispatch(display);
     }
-
+    
     wl_display_disconnect(state.display);
-
+    
     return 0;
 }
