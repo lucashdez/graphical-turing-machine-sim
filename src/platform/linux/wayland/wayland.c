@@ -1,29 +1,24 @@
 #include "wayland.h"
 
-internal
-b32 lwl_get_free_buffer(WaylandState *state) {
-	int i;
-    for(i = 0; i < 3; i++)
-    {
-        if (!state->buffers[i].busy) {
-            state->cur = i;
-			return 1;
-        }
+internal b32 lwl_get_free_buffer(WaylandState *state) {
+  int i;
+  for (i = 0; i < 3; i++) {
+    if (!state->buffers[i].busy) {
+      state->cur = i;
+      return 1;
     }
-	return 0;
+  }
+  return 0;
 }
-
 
 /**********************/
 /* API IMPLEMENTATION */
 /**********************/
 
-internal s32
-pltf_renderer_begin_section(PlatformWindow *w)
-{
+s32 pltf_renderer_begin_section(PlatformWindow *w) {
   b32 found = lwl_get_free_buffer(w->os_window);
   if (!found) {
-	return -1;
+    return -1;
   }
   WaylandState *state = w->os_window;
   ShmBuffer *buf = &state->buffers[state->cur];
@@ -31,14 +26,12 @@ pltf_renderer_begin_section(PlatformWindow *w)
   return 0;
 }
 
-internal void*
-pltf_get_framebuffer(PlatformWindow *wnd) {
-
-	WaylandState *s = wnd->os_window;
-    ShmBuffer *buf = &s->buffers[s->cur];
-    if (!buf){ 
-        return 0;
-    }
-    buf->busy = 1;
-	return buf->data;
+extern void *pltf_get_framebuffer(PlatformWindow *wnd) {
+  WaylandState *s = wnd->os_window;
+  ShmBuffer *buf = &s->buffers[s->cur];
+  if (!buf) {
+    return 0;
+  }
+  buf->busy = 1;
+  return buf->data;
 }

@@ -1,0 +1,5 @@
+IndentWidth: 1
+AlignAfterOpenBracket: Align
+AlignTrailingComments: Always
+BreakBeforeBraces: Allman
+BreakAfterReturnType: All

@@ -36,22 +36,22 @@ internal void pltf_mem_release(void*);
 internal void pltf_print(const char* s);
 
 /* Window things */
-internal PlatformWindow* pltf_window_create(Arena *arena, s32 width, s32 height, struct StringConstU8 title);
-internal void pltf_window_destroy(PlatformWindow* win);
+extern PlatformWindow* pltf_window_create(Arena *arena, s32 width, s32 height, struct StringConstU8 title);
+extern void pltf_window_destroy(PlatformWindow* win);
 
 /* Frame things */
-internal void pltf_window_present_frame(PlatformWindow* win, void* pixels, u32 pitch);
-internal void pltf_poll_events(PlatformWindow* win);
-internal u64 pltf_timestamp(void);
+extern void pltf_window_present_frame(PlatformWindow* win, void* pixels, u32 pitch);
+extern void pltf_poll_events(PlatformWindow* win);
+extern u64 pltf_timestamp(void);
 typedef void (*PlatformFrameCallback)(PlatformWindow *wnd, void *user_pointer);
 
 /* main loop */ 
-internal void pltf_window_set_frame_callback(PlatformWindow *wnd, PlatformFrameCallback cb, void* user);
-internal void pltf_window_run_loop(PlatformWindow *wnd);
+extern void pltf_window_set_frame_callback(PlatformWindow *wnd, PlatformFrameCallback cb, void* user);
+extern void pltf_window_run_loop(PlatformWindow *wnd);
 
 
 /* Drawing related functions */
-internal void* pltf_get_framebuffer(PlatformWindow *wnd);
-internal s32 pltf_renderer_begin_section(PlatformWindow *w);
+extern void* pltf_get_framebuffer(PlatformWindow *wnd);
+extern s32 pltf_renderer_begin_section(PlatformWindow *w);
 
 #endif /* PLATFORM_H */
