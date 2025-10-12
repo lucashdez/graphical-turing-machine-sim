@@ -26,6 +26,7 @@ typedef struct PlatformWindow {
 
 typedef enum PlatformEvent {
     PltfNone,
+	PltfResize,
 } PlatformEvent;
 
 /* ~ API */

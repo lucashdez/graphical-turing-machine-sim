@@ -105,6 +105,8 @@ typedef union Rects32
   S                                                                            \
  } while (0)
 
+#define UNUSED(x) (void)(x)
+
 /* Strings */
 #define Stringify_(S) #S
 #define Stringify(S) Stringify_(S)
