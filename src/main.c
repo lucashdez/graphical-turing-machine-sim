@@ -217,6 +217,10 @@ pointer_handle_button(void *data, struct wl_pointer *pointer, uint32_t serial,
                       uint32_t time, uint32_t button, uint32_t state)
 {
  /*  state = WL_POINTER_BUTTON_STATE_PRESSED o RELEASED */
+ WaylandState *s = data;
+
+ INFO("Pointer (%d, %d)", s->pointer_x, s->pointer_y);
+
 }
 
 void
@@ -231,7 +235,7 @@ void
 pointer_handle_frame(void *data, struct wl_pointer *pointer)
 {
  WaylandState *state = data;
- INFO("Pointer (%d, %d)", state->pointer_x, state->pointer_y);
+ //INFO("Pointer (%d, %d)", state->pointer_x, state->pointer_y);
  /*  TODO (lucashdez) */
 }
 
@@ -346,16 +350,28 @@ app_step(PlatformWindow *w, void *user_ptr)
   .height = 50,
  };
     
- renderer_draw_rect(w, r1, 0xFFaa0000, true);
- renderer_draw_rect(w, r2, 0xFF0000aa, true);
- renderer_draw_rect(w, r3, 0xFF00FF00, true);
- renderer_draw_rect(w, r4, 0xFF00FFFF, true);
-    
+ //renderer_draw_rect(w, r1, 0xFFaa0000, true);
+ //renderer_draw_rect(w, r2, 0xFF0000aa, true);
+ //renderer_draw_rect(w, r3, 0xFF00FF00, true);
+ //renderer_draw_rect(w, r4, 0xFF00FFFF, true);
+ Vec2 pointer_pos = pltf_get_pointer_pos(w);
+ Rects32 pointer_rect = {
+  .p = {.x = pointer_pos.x, .y = pointer_pos.y},
+  .width = 100,
+  .height = 10,
+ };
+ /* BUG: Weird thing with the position and the virtual coords */
+ /* It only works when the screen is at full screen */
+ renderer_draw_rect(w, pointer_rect, 0xFFFFFFFF, true);
+
+
+
+
  renderer_end_section(w);
  xOffset = (xOffset + 1) % 500;
  /*  Present this in the upper corner */
- INFO("dt=%llu ms (%.2f fps)", frame->dt,
-	  1000.0f / (frame->dt ? frame->dt : 1));
+ /* INFO("dt=%llu ms (%.2f fps)", frame->dt, */
+ /* 	  1000.0f / (frame->dt ? frame->dt : 1)); */
 }
 
 internal void

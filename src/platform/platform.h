@@ -39,6 +39,7 @@ internal void pltf_print(const char* s);
 /* Window things */
 extern PlatformWindow* pltf_window_create(Arena *arena, s32 width, s32 height, struct StringConstU8 title);
 extern void pltf_window_destroy(PlatformWindow* win);
+extern Vec2 pltf_get_pointer_pos(PlatformWindow* win);
 
 /* Frame things */
 extern void pltf_window_present_frame(PlatformWindow* win, void* pixels, u32 pitch);

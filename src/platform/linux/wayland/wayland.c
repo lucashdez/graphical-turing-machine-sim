@@ -15,6 +15,7 @@ internal b32 lwl_get_free_buffer(WaylandState *state) {
 /* API IMPLEMENTATION */
 /**********************/
 
+/* Renderer things */
 s32 pltf_renderer_begin_section(PlatformWindow *w) {
   b32 found = lwl_get_free_buffer(w->os_window);
   if (!found) {
@@ -34,4 +35,14 @@ extern void *pltf_get_framebuffer(PlatformWindow *wnd) {
   }
   buf->busy = 1;
   return buf->data;
+}
+
+
+/* Window things */
+extern Vec2
+pltf_get_pointer_pos(PlatformWindow *win)
+{
+ WaylandState *s = win->os_window;
+ Vec2 pos = {.x = s->pointer_x, .y = s->pointer_y};
+ return pos;
 }
