@@ -354,7 +354,7 @@ app_step(PlatformWindow *w, void *user_ptr)
  //renderer_draw_rect(w, r2, 0xFF0000aa, true);
  //renderer_draw_rect(w, r3, 0xFF00FF00, true);
  //renderer_draw_rect(w, r4, 0xFF00FFFF, true);
- Vec2 pointer_pos = pltf_get_pointer_pos(w);
+ Vec2 pointer_pos = pltf_get_pointer_pos(w); /* Hay que poner el pointer_pos en Virtual COORDS y luego pasarlo a render_rect de la forma correcta  */
  Rects32 pointer_rect = {
   .p = {.x = pointer_pos.x, .y = pointer_pos.y},
   .width = 100,
