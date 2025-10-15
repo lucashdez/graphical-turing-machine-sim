@@ -43,6 +43,9 @@ extern Vec2
 pltf_get_pointer_pos(PlatformWindow *win)
 {
  WaylandState *s = win->os_window;
- Vec2 pos = {.x = s->pointer_x, .y = s->pointer_y};
+ Vec2 pos = {
+	 .x = (((f32)s->pointer_x)/((f32)win->width)) * VIRTUAL_WIDTH ,
+	 .y =  (((f32)s->pointer_y)/((f32)win->height)) * VIRTUAL_HEIGHT
+ };
  return pos;
 }
