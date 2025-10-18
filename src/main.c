@@ -129,7 +129,7 @@ create_shm_buffer(WaylandState *S, ShmBuffer *B, s32 w, s32 h)
  B->data = mem;
  B->size = size;
  B->stride = stride;
- B->busy = false;
+ B->busy = 0;
 
  wl_buffer_add_listener(buffer, &buffer_listener, B);
  return 0;
@@ -297,7 +297,7 @@ static const struct wl_registry_listener registry_listener = {
 internal void
 toplevel_handle_close_action(void *data, struct xdg_toplevel *toplevel)
 {
- running = false;
+ running = 0;
 }
 
 internal void
@@ -359,12 +359,11 @@ app_step(PlatformWindow *w, void *user_ptr)
             render_rect de la forma correcta  */
  Rects32 pointer_rect = {
      .p = {.x = pointer_pos.x, .y = pointer_pos.y},
-     .width = 100,
-     .height = 10,
+     .width = 300,
+     .height = 20,
  };
- /* BUG: Weird thing with the position and the virtual coords */
- /* It only works when the screen is at full screen */
- renderer_draw_rect(w, pointer_rect, 0xFFFFFFFF, true);
+
+ renderer_draw_rect(w, pointer_rect, 0xFFFFFFFF, false, 2);
 
  renderer_end_section(w);
  xOffset = (xOffset + 1) % 500;
@@ -454,6 +453,7 @@ main(int argc, char *argv[])
  wl_surface_commit(state.surface);
 
  /* SET frame callback */
+ /* pltf_window_set_frame_callback(&window, app_step, &state); */
  state.frame_cb = app_step;
  state.frame_user = &state;
  /* - */
