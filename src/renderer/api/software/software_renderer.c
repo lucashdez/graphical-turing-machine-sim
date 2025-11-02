@@ -1,4 +1,5 @@
 #include "../../renderer.h"
+#include <math.h>
 
 internal s32 renderer_begin_section(PlatformWindow *w) {
   if (pltf_renderer_begin_section(w) < 0)
@@ -46,3 +47,30 @@ renderer_draw_rect(PlatformWindow *window, Rects32 rect, u32 color, b32 filled, 
 				fb[y * window->width + x] = color;
 	}
 }
+
+ 
+
+internal void renderer_draw_circle(PlatformWindow *window, s32 cx, s32 cy, s32 radius, u32 color, b32 filled) {
+  static const f32 PI = 3.1415926335;
+  u32* fb = pltf_get_framebuffer(window);
+  f32 i, angle, x1, y1;
+  s32 cx1 = (cx * window->width) / VIRTUAL_WIDTH;
+  s32 cy1 = (cy * window->height) / VIRTUAL_HEIGHT;
+  
+  for (i = 0; i < 360; i+=0.1)
+    {
+      angle = i;
+      x1 = (f32)radius * cos(angle * PI / 180);
+      y1 = (f32)radius * sin(angle * PI / 180);
+      fb[((cy1+(s32)y1) * window->width) + (cx1+(s32)x1)] = color;
+    }
+}
+
+internal void
+renderer_draw_pixel(PlatformWindow *window, s32 x, s32 y, u32 color)
+{
+ u32 *fb = pltf_get_framebuffer(window);
+ s32 nx = (x * window->width) / VIRTUAL_WIDTH;
+ s32 ny = (y * window->height) / VIRTUAL_HEIGHT;
+ fb[ny*window->width+nx] = color;
+}    

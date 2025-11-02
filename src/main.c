@@ -364,7 +364,10 @@ app_step(PlatformWindow *w, void *user_ptr)
  };
 
  renderer_draw_rect(w, pointer_rect, 0xFFFFFFFF, false, 2);
+ renderer_draw_circle(w, pointer_pos.x, pointer_pos.y, 10, 0xffff0000, false);
+ renderer_draw_pixel(w, 50, 50, 0xff00ff00);
 
+ 
  renderer_end_section(w);
  xOffset = (xOffset + 1) % 500;
  /*  Present this in the upper corner */
@@ -437,7 +440,7 @@ main(int argc, char *argv[])
  state.x_surface = xdg_wm_base_get_xdg_surface(state.x_wm_base, state.surface);
  state.x_toplevel = xdg_surface_get_toplevel(state.x_surface);
  xdg_surface_add_listener(state.x_surface, &x_surface_listener, &window);
- xdg_toplevel_set_title(state.x_toplevel, "example");
+ xdg_toplevel_set_title(state.x_toplevel, "GTMS");
  xdg_toplevel_add_listener(state.x_toplevel, &toplevel_listener, &window);
  xdg_surface_set_window_geometry(state.x_surface, 0, 0, window.width,
                                  window.height);
