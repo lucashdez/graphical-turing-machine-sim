@@ -234,7 +234,7 @@ void
 pointer_handle_frame(void *data, struct wl_pointer *pointer)
 {
     WaylandState *state = data;
-    // INFO("Pointer (%d, %d)", state->pointer_x, state->pointer_y);
+    INFO("Pointer (%d, %d)", state->pointer_x, state->pointer_y);
     /*  TODO (lucashdez) */
 }
 
@@ -405,6 +405,10 @@ wl_frame_done(void *data, struct wl_callback *cb, u32 time)
 }
 
 /* ~ MAIN */
+// TODO(lucashdez): Send All the wayland specific to wayland handler.
+// TODO(lucashdez): Create the cpu_step function
+// TODO(lucashdez): Sym all the cpu instructions for the gba
+// TODO(lucashdez): Tile display
 int
 main(int argc, char *argv[])
 {
@@ -455,11 +459,9 @@ main(int argc, char *argv[])
     
     wl_surface_commit(state.surface);
     
-    /* SET frame callback */
-    /* pltf_window_set_frame_callback(&window, app_step, &state); */
-    state.frame_cb = app_step;
-    state.frame_user = &state;
-    /* - */
+    /* SET frame callback */ 
+    pltf_window_set_frame_callback(&window, app_step, &state);
+    
     
     while (running == 1)
     {

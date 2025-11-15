@@ -25,7 +25,7 @@ typedef struct WaylandState {
     struct xdg_wm_base *x_wm_base;
     struct xdg_surface *x_surface;
     struct xdg_toplevel *x_toplevel;
-
+    
     /*  INPUT: seat */
     struct wl_seat *seat;
     struct wl_pointer *pointer;
@@ -35,7 +35,7 @@ typedef struct WaylandState {
     void *frame_user;
     
     u32 last_frame;
-
+    
     s32 width;
     s32 height;
     
@@ -48,7 +48,7 @@ typedef struct WaylandState {
     
     b32 running;
     b32 configured;
-
+    
     s32 pointer_x;
     s32 pointer_y;
     
