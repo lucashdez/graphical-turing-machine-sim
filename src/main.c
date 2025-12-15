@@ -5,11 +5,11 @@
 #include "base/base.c"
 #include "platform/linux/wayland/wayland.c"
 
-#include "renderer/api/software/software_renderer.c"
+#include "ion/api/software/ion_sw.c"
 /*  THIS GOES TO WAYLAND */
 #include "platform/linux/wayland/xdg-shell-protocol.c"
 #include "platform/linux/wayland/xdg-shell-protocol.h"
-#include "renderer/renderer.h"
+#include "ion/ion.h"
 #include <stdint.h>
 #include <wayland-client-protocol.h>
 #include <wayland-client.h>
@@ -330,7 +330,7 @@ void
 app_step(PlatformWindow *w, void *user_ptr)
 {
     PlatformFrame *frame = &w->frame_info;
-    renderer_begin_section(w);
+    //renderer_begin_section(w);
     
     Rects32 r1 = {.p = {.x = 0, .y = 0}, .width = VIRTUAL_WIDTH, .height = 50};
     Rects32 r2 = {.p = {.x = 0, .y = 50},
@@ -348,6 +348,8 @@ app_step(PlatformWindow *w, void *user_ptr)
         .width = 50,
         .height = 50,
     };
+
+    ion_draw_rect(r1, 0xFFaa0000, true, 10);
     
     /*
         renderer_draw_rect(w, r1, 0xFFaa0000, true);
@@ -363,12 +365,12 @@ app_step(PlatformWindow *w, void *user_ptr)
         .height = 20,
     };
     
-    renderer_draw_rect(w, pointer_rect, 0xFFFFFFFF, false, 2);
-    renderer_draw_circle(w, pointer_pos.x, pointer_pos.y, 10, 0xffff0000, false);
-    renderer_draw_pixel(w, 50, 50, 0xff00ff00);
+    //renderer_draw_rect(w, pointer_rect, 0xFFFFFFFF, false, 2);
+    //renderer_draw_circle(w, pointer_pos.x, pointer_pos.y, 10, 0xffff0000, false);
+    //renderer_draw_pixel(w, 50, 50, 0xff00ff00);
     
     
-    renderer_end_section(w);
+    //renderer_end_section(w);
     xOffset = (xOffset + 1) % 500;
     /*  Present this in the upper corner */
     /* INFO("dt=%llu ms (%.2f fps)", frame->dt, */
@@ -461,6 +463,8 @@ main(int argc, char *argv[])
     
     /* SET frame callback */ 
     pltf_window_set_frame_callback(&window, app_step, &state);
+    // REAL RENDERER INIT
+    ion_init(&window);
     
     
     while (running == 1)

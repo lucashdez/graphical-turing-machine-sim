@@ -2,6 +2,8 @@
 #ifndef BASE_H
 #define BASE_H
 
+#include <stdio.h>
+
 #define VIRTUAL_WIDTH 1920
 #define VIRTUAL_HEIGHT 1080
 
@@ -106,6 +108,8 @@ typedef union Rects32
  } while (0)
 
 #define UNUSED(x) (void)(x)
+
+#define ASSERT(x) do {if (!(x)) {ERR("Assertion failed %s", #x); (*(volatile int*)0 = 0);}} while(0) 
 
 /* Strings */
 #define Stringify_(S) #S

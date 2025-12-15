@@ -1,50 +1,66 @@
-#include "../../renderer.h"
+#include "../../ion.h"
 #include <math.h>
 
-internal s32 renderer_begin_section(PlatformWindow *w) {
-  if (pltf_renderer_begin_section(w) < 0)
-	return -1;
-}
+typedef struct _Ion {
+    b32 frame_active;
+    PlatformWindow *window;
+} Ion;
 
-internal void renderer_end_section(PlatformWindow *w) {
-  
-	return;
-}
+global_var Ion gion = {0};
 
-internal void
-renderer_draw_rect(PlatformWindow *window, Rects32 rect, u32 color, b32 filled, s32 thickness)
+void ion_init(PlatformWindow *window)
 {
-	u32* fb = pltf_get_framebuffer(window);
-	s32 rx1 = (rect.p.x * window->width) / VIRTUAL_WIDTH;
-	s32 rx2 = ((rect.p.x + rect.width) * window->width) / VIRTUAL_WIDTH;
-	s32 ry1 = (rect.p.y * window->height) / VIRTUAL_HEIGHT;
-	s32 ry2 = ((rect.p.y + rect.height) * window->height) / VIRTUAL_HEIGHT;
+    gion.window = window;
+    gion.frame_active = 0;
+}
+
+void ion_begin_frame() 
+{
+    ION_ASSERT(!gion.frame_active);
+    gion.frame_active = 1;
+}
+
+void ion_end_frame()
+{
+    ION_ASSERT(gion.frame_active);
+    gion.frame_active = 0;
+}
+
+void
+ion_draw_rect(Rects32 rect, u32 color, b32 filled, s32 thickness)
+{
+    ION_ASSERT(gion.frame_active);
+	u32* fb = pltf_get_framebuffer(gion.window);
+	s32 rx1 = (rect.p.x * gion.window->width) / VIRTUAL_WIDTH;
+	s32 rx2 = ((rect.p.x + rect.width) * gion.window->width) / VIRTUAL_WIDTH;
+	s32 ry1 = (rect.p.y * gion.window->height) / VIRTUAL_HEIGHT;
+	s32 ry2 = ((rect.p.y + rect.height) * gion.window->height) / VIRTUAL_HEIGHT;
 	if (filled)
 	{
 		s32 y1, x1;
 		for (y1 = ry1; y1 < ry2; ++y1)
 			for (x1 = rx1; x1 < rx2; ++x1)
 				{
-					fb[y1 * window->width + x1] = color;
+					fb[y1 * gion.window->width + x1] = color;
 				}
 	}
 	else
 	{
 		for (s32 y = ry1; y < ry1 + thickness && y <= ry2; ++y)
 			for (s32 x = rx1; x <= rx2; ++x)
-				fb[y * window->width + x] = color;
+				fb[y * gion.window->width + x] = color;
 
 		for (s32 y = ry2 - thickness + 1; y <= ry2; ++y)
 			for (s32 x = rx1; x <= rx2; ++x)
-				fb[y * window->width + x] = color;
+				fb[y * gion.window->width + x] = color;
 
 		for (s32 y = ry1 + thickness; y <= ry2 - thickness; ++y)
 			for (s32 x = rx1; x < rx1 + thickness && x <= rx2; ++x)
-				fb[y * window->width + x] = color;
+				fb[y * gion.window->width + x] = color;
 
 		for (s32 y = ry1 + thickness; y <= ry2 - thickness; ++y)
 			for (s32 x = rx2 - thickness + 1; x <= rx2; ++x)
-				fb[y * window->width + x] = color;
+				fb[y * gion.window->width + x] = color;
 	}
 }
 
