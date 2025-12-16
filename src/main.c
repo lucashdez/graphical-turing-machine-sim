@@ -7,13 +7,8 @@
 
 #include "ion/api/software/ion_sw.c"
 /*  THIS GOES TO WAYLAND */
-#include "platform/linux/wayland/xdg-shell-protocol.c"
-#include "platform/linux/wayland/xdg-shell-protocol.h"
 #include "ion/ion.h"
 #include <stdint.h>
-#include <wayland-client-protocol.h>
-#include <wayland-client.h>
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -330,33 +325,11 @@ void
 app_step(PlatformWindow *w, void *user_ptr)
 {
     PlatformFrame *frame = &w->frame_info;
-    //renderer_begin_section(w);
+    PlatformPresent present = pltf_begin_present(w);
+    ion_begin_frame(&present);
     
     Rects32 r1 = {.p = {.x = 0, .y = 0}, .width = VIRTUAL_WIDTH, .height = 50};
-    Rects32 r2 = {.p = {.x = 0, .y = 50},
-        .width = VIRTUAL_WIDTH,
-        .height = VIRTUAL_HEIGHT - 50};
-    
-    Rects32 r3 = {
-        .p = {.x = 10 + xOffset, .y = VIRTUAL_HEIGHT / 2},
-        .width = 50,
-        .height = 50,
-    };
-    
-    Rects32 r4 = {
-        .p = {.x = 80 + xOffset * 12, .y = VIRTUAL_HEIGHT / 2},
-        .width = 50,
-        .height = 50,
-    };
-
     ion_draw_rect(r1, 0xFFaa0000, true, 10);
-    
-    /*
-        renderer_draw_rect(w, r1, 0xFFaa0000, true);
-        renderer_draw_rect(w, r2, 0xFF0000aa, true);
-        renderer_draw_rect(w, r3, 0xFF00FF00, true);
-        renderer_draw_rect(w, r4, 0xFF00FFFF, true);
-     */
     Vec2 pointer_pos = pltf_get_pointer_pos(w); /* Hay que poner el pointer_pos en Virtual COORDS y luego pasarlo a
                render_rect de la forma correcta  */
     Rects32 pointer_rect = {
@@ -365,16 +338,13 @@ app_step(PlatformWindow *w, void *user_ptr)
         .height = 20,
     };
     
-    //renderer_draw_rect(w, pointer_rect, 0xFFFFFFFF, false, 2);
-    //renderer_draw_circle(w, pointer_pos.x, pointer_pos.y, 10, 0xffff0000, false);
-    //renderer_draw_pixel(w, 50, 50, 0xff00ff00);
     
-    
-    //renderer_end_section(w);
-    xOffset = (xOffset + 1) % 500;
     /*  Present this in the upper corner */
     /* INFO("dt=%llu ms (%.2f fps)", frame->dt, */
     /* 	  1000.0f / (frame->dt ? frame->dt : 1)); */
+    ion_end_frame();
+    pltf_end_present(w);
+
 }
 
 internal void
@@ -396,11 +366,6 @@ wl_frame_done(void *data, struct wl_callback *cb, u32 time)
         w->last_frame = now_ms;
         w->frame_cb(wnd, w->frame_user);
     }
-    
-    ShmBuffer *buf = &w->buffers[w->cur];
-    wl_surface_attach(w->surface, buf->buffer, 0, 0);
-    wl_surface_damage_buffer(w->surface, 0, 0, wnd->width, wnd->height);
-    wl_surface_commit(w->surface);
     
     struct wl_callback *next_cb = wl_surface_frame(w->surface);
     wl_callback_add_listener(next_cb, &wl_surface_frame_listener, wnd);
@@ -436,7 +401,6 @@ main(int argc, char *argv[])
     state.configured = 0;
     state.last_frame = 0;
     state.display = display;
-    state.framebuffer = MMPushArrayZeros(&renderer_arena, u32, 1920 * 1080);
     window.os_window = &state;
     
     struct wl_registry *registry = wl_display_get_registry(display);

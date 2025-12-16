@@ -2,7 +2,10 @@
 #  define WAYLAND_H
 
 #include "../../platform.h"
-
+#include <wayland-client-protocol.h>
+#include <wayland-client.h>
+#include "xdg-shell-protocol.c"
+#include "xdg-shell-protocol.h"
 
 /* Structs */
 
@@ -48,6 +51,7 @@ typedef struct WaylandState {
     
     b32 running;
     b32 configured;
+    b32 present_active;
     
     s32 pointer_x;
     s32 pointer_y;

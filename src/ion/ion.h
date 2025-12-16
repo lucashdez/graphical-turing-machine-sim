@@ -12,7 +12,7 @@ void ion_init(PlatformWindow* window);
 void ion_shutdown(void);
 
 /* frame */
-void ion_begin_frame(void);
+void ion_begin_frame(const PlatformPresent *p);
 void ion_clear(u32 color);
 void ion_end_frame(void);
 void ion_present(void);

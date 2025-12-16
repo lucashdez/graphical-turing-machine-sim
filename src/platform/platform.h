@@ -5,14 +5,49 @@
 #    include "win32/win32.h" 
 #  endif
 
+#include "vulkan/vulkan.h"
+
 #include "../base/base.h"
+
+
+/* ~ ENUMS */
+
+typedef enum _PlatformEvent 
+{
+    PltfNone,
+	PltfResize,
+} PlatformEvent;
+
+typedef enum _PlatformPresentKind
+{
+    PlatformPresent_None,
+    PlatformPresent_Software,
+    PlatformPresent_Vulkan,
+} PlatformPresentKind;
 
 /*~ STRUCTS */
 
 typedef struct PlatformFrame {
     u64 dt;
-    u32 width, height;
 } PlatformFrame;
+
+typedef struct PlatformPresent {
+    PlatformPresentKind kind;
+    u32 width;
+    u32 height;
+
+    union {
+        struct {
+            void *pixels; /* u32* */
+            u32 pitch;
+        } sw;
+
+        struct {
+            void *image; /* VkImage */
+            void *queue; /* VkQueue */
+        } vk;
+    };
+} PlatformPresent;
 
 typedef struct PlatformWindow {
     s32 width;
@@ -22,12 +57,6 @@ typedef struct PlatformWindow {
 } PlatformWindow;
 
 
-/* ~ ENUMS */
-
-typedef enum PlatformEvent {
-    PltfNone,
-	PltfResize,
-} PlatformEvent;
 
 /* ~ API */
 internal void* pltf_mem_reserve();
@@ -42,18 +71,15 @@ extern void pltf_window_destroy(PlatformWindow* win);
 extern Vec2 pltf_get_pointer_pos(PlatformWindow* win);
 
 /* Frame things */
-extern void pltf_window_present_frame(PlatformWindow* win, void* pixels, u32 pitch);
+PlatformPresent pltf_begin_present(PlatformWindow *win);
+void pltf_end_present(PlatformWindow *win);
 extern void pltf_poll_events(PlatformWindow* win);
 extern u64 pltf_timestamp(void);
 typedef void (*PlatformFrameCallback)(PlatformWindow *wnd, void *user_pointer);
 
+
 /* main loop */ 
 extern void pltf_window_set_frame_callback(PlatformWindow *wnd, PlatformFrameCallback cb, void* user);
 extern void pltf_window_run_loop(PlatformWindow *wnd);
-
-
-/* Drawing related functions */
-extern void* pltf_get_framebuffer(PlatformWindow *wnd);
-extern s32 pltf_renderer_begin_section(PlatformWindow *w);
 
 #endif /* PLATFORM_H */

@@ -1,7 +1,7 @@
 #include "base.h"
 #include <stdlib.h>
 
-internal void *
+void *
 mm_memset(void *dest, register int val, register u64 len)
 {
  register u8 *ptr = (u8 *)dest;
@@ -12,7 +12,7 @@ mm_memset(void *dest, register int val, register u64 len)
  return dest;
 }
 
-internal void *
+void *
 mm_memcpy(void *dest, void *src, u64 len)
 {
  char *d = dest;
@@ -24,7 +24,7 @@ mm_memcpy(void *dest, void *src, u64 len)
  return dest;
 }
 
-internal void *
+void *
 mm_memcpymv(void *dest, void *src, u64 len)
 {
  char *d = dest;
@@ -65,7 +65,7 @@ mm_create_malloc_base_memory(void)
  return (&memory);
 }
 
-internal struct Arena
+struct Arena
 mm_make_arena_reserve(struct MM_BaseMemory *base, u64 reserve_size)
 {
  struct Arena result = {};
@@ -75,14 +75,14 @@ mm_make_arena_reserve(struct MM_BaseMemory *base, u64 reserve_size)
  return (result);
 }
 
-internal struct Arena
+struct Arena
 mm_make_arena(struct MM_BaseMemory *base)
 {
  struct Arena result = mm_make_arena_reserve(base, KB(64));
  return (result);
 }
 
-internal struct Arena
+struct Arena
 mm_scratch_arena()
 {
  /*  TODO CHANGE THIS TO GLOBAL */
@@ -90,14 +90,14 @@ mm_scratch_arena()
  return result;
 }
 
-internal void
+void
 mm_arena_release(struct Arena *arena)
 {
  struct MM_BaseMemory *base = arena->base;
  base->release(base->ctx, arena->memory, arena->cap);
 }
 
-internal void *
+void *
 mm_arena_push(struct Arena *arena, u64 size)
 {
  void *result = NULL;
@@ -116,7 +116,7 @@ mm_arena_push(struct Arena *arena, u64 size)
  return (result);
 }
 
-internal void *
+void *
 mm_arena_push_zeros(struct Arena *arena, u64 size)
 {
  void *result = NULL;

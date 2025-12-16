@@ -15,18 +15,6 @@ internal b32 lwl_get_free_buffer(WaylandState *state) {
 /* API IMPLEMENTATION */
 /**********************/
 
-/* Renderer things */
-s32 pltf_renderer_begin_section(PlatformWindow *w) {
-    b32 found = lwl_get_free_buffer(w->os_window);
-    if (!found) {
-        return -1;
-    }
-    WaylandState *state = w->os_window;
-    ShmBuffer *buf = &state->buffers[state->cur];
-    mm_memset(buf->data, 0, buf->size);
-    return 0;
-}
-
 extern void *pltf_get_framebuffer(PlatformWindow *wnd) {
     WaylandState *s = wnd->os_window;
     ShmBuffer *buf = &s->buffers[s->cur];
@@ -36,7 +24,6 @@ extern void *pltf_get_framebuffer(PlatformWindow *wnd) {
     buf->busy = 1;
     return buf->data;
 }
-
 
 /* Window things */
 extern Vec2
@@ -55,5 +42,38 @@ extern void pltf_window_set_frame_callback(PlatformWindow *wnd, PlatformFrameCal
     WaylandState* wl_window = wnd->os_window;
     wl_window->frame_cb = cb;
     wl_window->frame_user = user;
-    
+}
+
+
+PlatformPresent pltf_begin_present(PlatformWindow *win)
+{
+    WaylandState *s = win->os_window;
+    ASSERT(!s->present_active);
+    while(!lwl_get_free_buffer(s)) {
+        wl_display_dispatch(s->display);
+    }
+
+    ShmBuffer *buf = &s->buffers[s->cur];
+    buf->busy = 1;
+
+    s->present_active = 1;
+    PlatformPresent p = {0};
+    p.kind = PlatformPresent_Software;
+    p.width = win->width;
+    p.height = win->height;
+    p.sw.pixels = buf->data;
+    p.sw.pitch = buf->stride;
+    return p;
+}
+
+void pltf_end_present(PlatformWindow *win)
+{
+    WaylandState *s = win->os_window;
+    ASSERT(s->present_active);
+    ShmBuffer *buf = &s->buffers[s->cur];
+    wl_surface_attach(s->surface, buf->buffer, 0, 0);
+    wl_surface_damage_buffer(s->surface, 0, 0, s->width, s->height);
+    wl_surface_commit(s->surface);
+    s->cur = (s->cur + 1) % 3;
+    s->present_active = false;
 }
